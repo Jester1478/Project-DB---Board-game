@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>กดงูเหมือนกดไลค์ — ระบบจองบอร์ดเกม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700;800&family=Sarabun:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --felt: #1B4332;
+    --felt-deep: #0F2A21;
+    --felt-light: #2D6A4F;
+    --parchment: #F3ECDD;
+    --parchment-dim: #E7DCC4;
+    --wood: #A97C50;
+    --wood-dark: #7C5A38;
+    --ink: #241C15;
+    --ivory: #F6F1E4;
+    --ok: #4C9A6A;
+    --ok-deep: #336E4A;
+    --reserved: #D8A34E;
+    --inuse: #4472A8;
+    --overdue: #C1443C;
+    --radius: 10px;
+    --shadow: 0 6px 16px rgba(15,42,33,.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 20% 10%, rgba(255,255,255,.04), transparent 40%),
+      repeating-linear-gradient(135deg, rgba(255,255,255,.015) 0 2px, transparent 2px 6px),
+      linear-gradient(180deg, var(--felt-deep), var(--felt) 40%, var(--felt-deep));
+    color: var(--ivory);
+    font-family:'Sarabun',sans-serif;
+    min-height:100vh;
+  }
+  h1,h2,h3,.display{font-family:'Kanit',sans-serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  /* ===== Header ===== */
+  header.top{
+    padding: 22px 28px 18px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    flex-wrap:wrap;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .brand{display:flex; align-items:center; gap:14px;}
+  .brand .mark{
+    width:52px;height:52px;border-radius:12px;
+    background: linear-gradient(155deg, var(--wood), var(--wood-dark));
+    display:flex;align-items:center;justify-content:center;
+    font-size:26px; box-shadow: var(--shadow);
+    border: 2px solid rgba(255,255,255,.15);
+    transform: rotate(-4deg);
+  }
+  .brand .titles h1{font-size:20px; margin:0; font-weight:700; letter-spacing:.3px;}
+  .brand .titles p{margin:2px 0 0; font-size:12.5px; color:var(--parchment-dim); opacity:.85;}
+
+  .clock-box{
+    background: rgba(0,0,0,.22);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius: var(--radius);
+    padding:10px 14px;
+    display:flex; align-items:center; gap:10px;
+    font-size:13px;
+  }
+  .clock-box input[type=datetime-local]{
+    background: var(--ivory); color:var(--ink); border:none; border-radius:6px;
+    padding:6px 8px; font-family:'JetBrains Mono',monospace; font-size:12.5px;
+  }
+  .clock-box .lbl{color:var(--parchment-dim); font-size:11.5px; text-transform:uppercase; letter-spacing:.06em;}
+
+  nav.tabs{
+    display:flex; gap:6px; padding: 14px 28px 0; flex-wrap:wrap;
+  }
+  nav.tabs button{
+    font-family:'Kanit',sans-serif; font-weight:600; font-size:14.5px;
+    background: transparent; color: var(--parchment-dim);
+    border: none; border-bottom: 3px solid transparent;
+    padding: 10px 6px; cursor:pointer; letter-spacing:.2px;
+    transition: all .15s ease;
+  }
+  nav.tabs button:hover{ color: var(--ivory); }
+  nav.tabs button.active{ color: var(--ivory); border-bottom-color: var(--reserved); }
+
+  main{ padding: 24px 28px 60px; max-width:1200px; margin:0 auto; }
+  section.view{ display:none; animation: fade .25s ease; }
+  section.view.active{ display:block; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  .section-head{ margin-bottom:18px; }
+  .section-head h2{ font-size:22px; margin:0 0 4px; }
+  .section-head p{ margin:0; color:var(--parchment-dim); font-size:13.5px; }
+
+  /* ===== Catalog ===== */
+  .filters{ display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  .filters input, .filters select{
+    background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+    color: var(--ivory); padding:9px 12px; border-radius:8px; font-family:'Sarabun',sans-serif;
+    font-size:13.5px;
+  }
+  .filters input::placeholder{ color: rgba(246,241,228,.5); }
+
+  .grid{ display:grid; grid-template-columns: repeat(auto-fill,minmax(230px,1fr)); gap:16px; }
+  .card-game{
+    background: linear-gradient(160deg, var(--parchment), var(--parchment-dim));
+    border-radius: var(--radius); color: var(--ink); padding:16px;
+    box-shadow: var(--shadow); border: 1px solid rgba(0,0,0,.08);
+    position:relative; overflow:hidden;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .card-game:hover{ transform: translateY(-3px); box-shadow: 0 10px 22px rgba(15,42,33,.45); }
+  .card-game .icon{ font-size:30px; margin-bottom:8px; display:block; }
+  .card-game h3{ font-size:16.5px; margin:0 0 4px; }
+  .card-game .cat{
+    display:inline-block; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em;
+    background: var(--wood); color:var(--ivory); padding:2px 8px; border-radius:20px; margin-bottom:8px;
+  }
+  .card-game .meta{ font-size:12px; color:#5c4a34; margin-bottom:10px; }
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600;
+    padding:5px 10px; border-radius:20px; margin-bottom:10px;
+  }
+  .status-pill.avail{ background: rgba(76,154,106,.16); color: var(--ok-deep); }
+  .status-pill.full{ background: rgba(193,68,60,.14); color: var(--overdue); }
+  .status-pill .dot{ width:7px;height:7px;border-radius:50%; background:currentColor; }
+  .btn{
+    font-family:'Kanit',sans-serif; font-weight:600; font-size:13.5px;
+    border:none; border-radius:8px; padding:9px 14px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:6px; transition: filter .15s ease, transform .1s ease;
+  }
+  .btn:active{ transform: scale(.97); }
+  .btn-wood{ background: linear-gradient(160deg, var(--wood), var(--wood-dark)); color:var(--ivory); width:100%; justify-content:center; }
+  .btn-wood:hover{ filter:brightness(1.08); }
+  .btn-ghost{ background: rgba(255,255,255,.08); color:var(--ivory); border:1px solid rgba(255,255,255,.18); }
+  .btn-ghost:hover{ background: rgba(255,255,255,.14); }
+  .btn-ok{ background: var(--ok); color:#fff; }
+  .btn-inuse{ background: var(--inuse); color:#fff; }
+  .btn-sm{ padding:6px 10px; font-size:12px; }
+
+  /* ===== Timeline ===== */
+  .timeline-picker{ margin-bottom:20px; }
+  .timeline-picker select{
+    background: rgba(255,255,255,.07); color:var(--ivory); border:1px solid rgba(255,255,255,.16);
+    padding:10px 14px; border-radius:8px; font-family:'Kanit',sans-serif; font-size:14px; min-width:260px;
+  }
+  .game-brief{ display:flex; gap:16px; align-items:center; margin: 14px 0 22px; flex-wrap:wrap; }
+  .game-brief .icon{ font-size:38px; }
+  .game-brief h3{ margin:0; font-size:19px; }
+  .game-brief .sub{ font-size:12.5px; color:var(--parchment-dim); }
+
+  .copy-track{
+    background: rgba(0,0,0,.2); border:1px solid rgba(255,255,255,.08);
+    border-radius: var(--radius); padding:14px 16px; margin-bottom:14px;
+  }
+  .copy-track .copy-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .copy-track .copy-head .name{ font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--reserved); }
+  .copy-track .copy-head .state{ font-size:12px; padding:3px 9px; border-radius:20px; font-weight:600; }
+  .copy-track .copy-head .state.free{ background: rgba(76,154,106,.2); color:#8FE0AC; }
+  .copy-track .copy-head .state.busy{ background: rgba(216,163,78,.2); color:#F2C784; }
+
+  .ruler{ display:flex; font-size:9.5px; color: rgba(246,241,228,.45); margin-bottom:4px; font-family:'JetBrains Mono',monospace; }
+  .ruler span{ flex:1; text-align:left; }
+
+  .track{
+    position:relative; height:46px; border-radius:8px;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0, rgba(255,255,255,.05) 1px, transparent 1px, transparent calc(100%/14));
+    background-color: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.06);
+    cursor: crosshair;
+  }
+  .block{
+    position:absolute; top:4px; bottom:4px; border-radius:6px;
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; color:#fff;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    padding:0 4px; overflow:hidden; box-shadow: 0 2px 6px rgba(0,0,0,.3);
+    border: 1px solid rgba(255,255,255,.25);
+  }
+  .block.RESERVED{ background: linear-gradient(160deg,#E2AD5C,#C48A38); }
+  .block.IN_USE{ background: linear-gradient(160deg,#5C87C2,#3A5F94); }
+  .block.OVERDUE{ background: linear-gradient(160deg,#D25A50,#A7332A); animation: pulse 1.6s infinite; }
+  @keyframes pulse{ 0%,100%{ filter:brightness(1);} 50%{ filter:brightness(1.25);} }
+  .now-line{ position:absolute; top:-4px; bottom:-4px; width:2px; background:#F6F1E4; box-shadow:0 0 6px #F6F1E4; }
+
+  .legend{ display:flex; gap:16px; margin: 10px 0 22px; flex-wrap:wrap; font-size:12px; color:var(--parchment-dim); }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .legend i{ width:10px;height:10px;border-radius:3px; display:inline-block; }
+
+  /* ===== Modal ===== */
+  .overlay{
+    position:fixed; inset:0; background: rgba(15,42,33,.72); backdrop-filter: blur(3px);
+    display:none; align-items:center; justify-content:center; z-index:50; padding:16px;
+  }
+  .overlay.show{ display:flex; }
+  .modal{
+    background: linear-gradient(165deg, var(--parchment), var(--parchment-dim));
+    color: var(--ink); border-radius: 14px; padding:24px; max-width:420px; width:100%;
+    box-shadow: 0 20px 50px rgba(0,0,0,.5); border: 1px solid rgba(0,0,0,.1);
+  }
+  .modal h3{ margin:0 0 4px; font-size:18px; }
+  .modal .sub{ font-size:12.5px; color:#6b5a42; margin-bottom:16px; }
+  .field{ margin-bottom:12px; }
+  .field label{ display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:#4a3a28; }
+  .field input, .field select{
+    width:100%; padding:9px 10px; border-radius:7px; border:1px solid #cbb994;
+    background:#fff; font-family:'Sarabun',sans-serif; font-size:13.5px;
+  }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .modal-actions{ display:flex; gap:10px; margin-top:18px; }
+  .modal-actions .btn{ flex:1; }
+  .err{ background:rgba(193,68,60,.12); color:#8f2c26; border:1px solid rgba(193,68,60,.3);
+    padding:9px 11px; border-radius:8px; font-size:12.5px; margin-bottom:12px; display:none; }
+  .err.show{ display:block; }
+
+  /* ===== Staff dashboard ===== */
+  .staff-search{ display:flex; gap:10px; margin-bottom:18px; }
+  .staff-search input{
+    flex:1; background: rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.16);
+    color:var(--ivory); padding:10px 14px; border-radius:8px; font-size:13.5px;
+  }
+  table.book-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  table.book-table th{
+    text-align:left; font-family:'Kanit',sans-serif; font-weight:600; font-size:11.5px;
+    color: var(--parchment-dim); text-transform:uppercase; letter-spacing:.05em;
+    padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.14);
+  }
+  table.book-table td{ padding:11px 12px; border-bottom:1px solid rgba(255,255,255,.06); vertical-align:middle; }
+  table.book-table tr:hover td{ background: rgba(255,255,255,.03); }
+  .badge{ font-size:11px; font-weight:700; padding:4px 9px; border-radius:20px; font-family:'Kanit',sans-serif; }
+  .badge.RESERVED{ background: rgba(216,163,78,.2); color:#F2C784; }
+  .badge.IN_USE{ background: rgba(68,114,168,.2); color:#9BBBE8; }
+  .badge.OVERDUE{ background: rgba(193,68,60,.22); color:#F09E97; }
+  .badge.RETURNED{ background: rgba(76,154,106,.16); color:#9BE0B4; }
+  .badge.CANCELLED{ background: rgba(255,255,255,.08); color: var(--parchment-dim); }
+  .empty-row{ text-align:center; padding:36px 0; color:var(--parchment-dim); font-size:13px; }
+
+  .toast-wrap{ position:fixed; bottom:22px; right:22px; z-index:80; display:flex; flex-direction:column; gap:10px; }
+  .toast{
+    background: linear-gradient(160deg, var(--parchment), var(--parchment-dim)); color:var(--ink);
+    padding:13px 18px; border-radius:10px; box-shadow: var(--shadow); font-size:13.5px;
+    display:flex; align-items:center; gap:10px; min-width:240px;
+    animation: slidein .2s ease;
+    border-left: 4px solid var(--ok-deep);
+  }
+  .toast.error{ border-left-color: var(--overdue); }
+  @keyframes slidein{ from{ transform:translateX(30px); opacity:0;} to{ transform:translateX(0); opacity:1;} }
+
+  footer{ text-align:center; padding:24px; color: rgba(246,241,228,.35); font-size:11.5px; }
+
+  @media (max-width:640px){
+    header.top{ padding:16px; } main{ padding:16px 14px 50px; }
+    .row2{ grid-template-columns:1fr; }
+    table.book-table{ font-size:12px; }
+    table.book-table th:nth-child(4), table.book-table td:nth-child(4){ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <div class="mark">🐍</div>
+    <div class="titles">
+      <h1>กดงูเหมือนกดไลค์</h1>
+      <p>ระบบจัดการสต๊อกคิวและการจองบอร์ดเกม · ม.พะเยา</p>
+    </div>
+  </div>
+  <div class="clock-box">
+    <span class="lbl">เวลาจำลอง</span>
+    <input type="datetime-local" id="clockInput">
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="active" data-tab="catalog">📚 แคตตาล็อกเกม</button>
+  <button data-tab="timeline">🗓️ ตารางคิว &amp; จอง</button>
+  <button data-tab="staff">🧑‍💼 Staff Dashboard</button>
+</nav>
+
+<main>
+
+  <!-- CATALOG -->
+  <section class="view active" id="view-catalog">
+    <div class="section-head">
+      <h2>แคตตาล็อกบอร์ดเกม</h2>
+      <p>ค้นหาเกม เช็คสต็อกว่าง แล้วดูตารางคิวได้ทันที</p>
+    </div>
+    <div class="filters">
+      <input type="text" id="searchInput" placeholder="ค้นหาชื่อเกม...">
+      <select id="categoryFilter"><option value="">ทุกหมวดหมู่</option></select>
+    </div>
+    <div class="grid" id="catalogGrid"></div>
+  </section>
+
+  <!-- TIMELINE -->
+  <section class="view" id="view-timeline">
+    <div class="section-head">
+      <h2>ตารางคิว &amp; การจอง</h2>
+      <p>เลือกเกม แล้วคลิกบนแถบเวลาที่ว่างเพื่อจองคิว</p>
+    </div>
+    <div class="timeline-picker">
+      <select id="gameSelect"></select>
+    </div>
+    <div class="game-brief" id="gameBrief"></div>
+    <div class="legend">
+      <span><i style="background:linear-gradient(160deg,#E2AD5C,#C48A38)"></i> RESERVED (จองแล้ว)</span>
+      <span><i style="background:linear-gradient(160deg,#5C87C2,#3A5F94)"></i> IN_USE (กำลังใช้)</span>
+      <span><i style="background:linear-gradient(160deg,#D25A50,#A7332A)"></i> OVERDUE (คืนสาย)</span>
+      <span><i style="background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.2)"></i> ว่าง — คลิกเพื่อจอง</span>
+    </div>
+    <div id="tracksWrap"></div>
+  </section>
+
+  <!-- STAFF -->
+  <section class="view" id="view-staff">
+    <div class="section-head">
+      <h2>Staff Dashboard</h2>
+      <p>ค้นหารายการจอง ส่งมอบเกม และบันทึกการรับคืน</p>
+    </div>
+    <div class="staff-search">
+      <input type="text" id="staffSearch" placeholder="ค้นหาด้วยรหัสนิสิต, ชื่อ, หรือชื่อเกม...">
+    </div>
+    <table class="book-table">
+      <thead>
+        <tr><th>เกม / กล่อง</th><th>ผู้จอง</th><th>ช่วงเวลา</th><th>สถานะ</th><th>การจัดการ</th></tr>
+      </thead>
+      <tbody id="staffTableBody"></tbody>
+    </table>
+  </section>
+
+</main>
+
+<footer>Prototype UI — จำลองข้อมูลในเบราว์เซอร์เท่านั้น ไม่ได้เชื่อมต่อฐานข้อมูลจริง</footer>
+
+<!-- Booking modal -->
+<div class="overlay" id="bookOverlay">
+  <div class="modal">
+    <h3>จองคิวบอร์ดเกม</h3>
+    <div class="sub" id="modalGameLabel"></div>
+    <div class="err" id="modalErr"></div>
+    <div class="field">
+      <label>รหัสนิสิต</label>
+      <input type="text" id="fStudentId" placeholder="เช่น 68023425">
+    </div>
+    <div class="field">
+      <label>ชื่อ-นามสกุล</label>
+      <input type="text" id="fStudentName" placeholder="ชื่อผู้จอง">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>เวลาเริ่ม</label>
+        <input type="time" id="fStart">
+      </div>
+      <div class="field">
+        <label>เวลาสิ้นสุด</label>
+        <input type="time" id="fEnd">
+      </div>
+    </div>
+    <p style="font-size:11.5px;color:#7a6a52;margin-top:-4px;">* จองได้ครั้งละ 30 นาที – 4 ชั่วโมง และห้ามจองซ้อนกับคิวอื่น (BR-01–BR-04)</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn btn-wood" onclick="submitBooking()">ยืนยันการจอง</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ===================== DATA MODEL ===================== */
+const games = [
+  { id:'catan', name:'Catan', icon:'🌾', category:'Strategy', minP:3, maxP:4, playtime:90,
+    copies:[{id:'CATAN-01',label:'CATAN-01'},{id:'CATAN-02',label:'CATAN-02'}] },
+  { id:'codenames', name:'Codenames', icon:'🕵️', category:'Party', minP:4, maxP:8, playtime:20,
+    copies:[{id:'CODE-01',label:'CODE-01'}] },
+  { id:'splendor', name:'Splendor', icon:'💎', category:'Strategy', minP:2, maxP:4, playtime:30,
+    copies:[{id:'SPLEN-01',label:'SPLEN-01'},{id:'SPLEN-02',label:'SPLEN-02'}] },
+  { id:'coup', name:'Coup', icon:'🎭', category:'Party', minP:2, maxP:6, playtime:15,
+    copies:[{id:'COUP-01',label:'COUP-01'}] },
+  { id:'ticket', name:'Ticket to Ride', icon:'🚂', category:'Family', minP:2, maxP:5, playtime:60,
+    copies:[{id:'TTR-01',label:'TTR-01'}] },
+  { id:'sushi', name:'Sushi Go!', icon:'🍣', category:'Family', minP:2, maxP:5, playtime:20,
+    copies:[{id:'SUSHI-01',label:'SUSHI-01'},{id:'SUSHI-02',label:'SUSHI-02'}] },
+];
+
+let bookings = []; // {id, gameId, copyId, studentId, studentName, start(Date), end(Date), status, actualReturn}
+let bookingSeq = 1;
+
+/* simulated "now" — defaults to real current time */
+let simNow = new Date();
+
+function todayAt(h,m){
+  const d = new Date(simNow);
+  d.setHours(h,m,0,0);
+  return d;
+}
+
+function seedData(){
+  const push = (gameId, copyId, sId, sName, sh, sm, eh, em, status) => {
+    bookings.push({
+      id: 'BK-' + String(bookingSeq++).padStart(3,'0'),
+      gameId, copyId, studentId:sId, studentName:sName,
+      start: todayAt(sh,sm), end: todayAt(eh,em),
+      status, actualReturn: null
+    });
+  };
+  const nowH = simNow.getHours();
+  // Seed a booking currently IN_USE that will look OVERDUE relative to "now"
+  push('catan','CATAN-01','68023111','สมชาย ใจดี', Math.max(0,nowH-2), 0, nowH, 0, 'IN_USE'); // ends right around now -> becomes overdue quickly
+  push('catan','CATAN-02','68023222','พิมพ์ชนก แซ่ตั้ง', nowH+1, 15, nowH+3, 15, 'RESERVED');
+  push('splendor','SPLEN-01','68023333','ธนกร ศรีสุข', nowH+2, 0, nowH+2, 45, 'RESERVED');
+  push('sushi','SUSHI-01','68023444','กมลชนก ทองดี', Math.max(0,nowH-1), 0, nowH+0, 30, 'IN_USE');
+  push('codenames','CODE-01','68023555','ภูผา เอกจิตร', nowH+4, 0, nowH+5, 0, 'RESERVED');
+}
+
+/* ===================== BUSINESS RULES ===================== */
+function overlaps(aStart,aEnd,bStart,bEnd){ return aStart < bEnd && bStart < aEnd; }
+
+function activeBookingsForStudent(studentId){
+  return bookings.filter(b => b.studentId === studentId && (b.status==='RESERVED'||b.status==='IN_USE'));
+}
+function hasOverdue(studentId){
+  return bookings.some(b => b.studentId === studentId && b.status==='OVERDUE');
+}
+
+function validateBooking({studentId, studentName, gameId, copyId, start, end}){
+  if(!studentId || !studentName) return 'กรุณากรอกรหัสนิสิตและชื่อ-นามสกุล';
+  if(!(start instanceof Date) || !(end instanceof Date) || isNaN(start) || isNaN(end)) return 'กรุณาระบุช่วงเวลาให้ถูกต้อง';
+  if(end <= start) return 'เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่ม';
+  const mins = (end-start)/60000;
+  if(mins < 30) return 'ระยะเวลาการจองต้องอย่างน้อย 30 นาที (BR-02)';
+  if(mins > 240) return 'ระยะเวลาการจองต้องไม่เกิน 4 ชั่วโมง (BR-02)';
+  if(hasOverdue(studentId)) return 'คุณมีรายการค้างสถานะ OVERDUE โปรดคืนเกมก่อนจองใหม่ (BR-04)';
+  if(activeBookingsForStudent(studentId).length >= 2) return 'คุณมีรายการจองที่ใช้งาน/รอใช้งานอยู่แล้ว 2 รายการ (BR-01)';
+  const conflict = bookings.some(b => b.copyId===copyId && (b.status==='RESERVED'||b.status==='IN_USE'||b.status==='OVERDUE')
+      && overlaps(start,end,b.start,b.end));
+  if(conflict) return 'ช่วงเวลานี้ถูกจองเต็มแล้ว (BR-03)';
+  return null;
+}
+
+function recomputeOverdue(){
+  bookings.forEach(b=>{
+    if(b.status==='IN_USE' && simNow > b.end) b.status = 'OVERDUE';
+  });
+}
+
+/* ===================== RENDER: CATALOG ===================== */
+function copyStatus(copy){
+  // free if no RESERVED/IN_USE/OVERDUE booking currently overlapping "now" AND no ongoing IN_USE/OVERDUE
+  const blocking = bookings.some(b => b.copyId===copy.id && (b.status==='IN_USE' || b.status==='OVERDUE') );
+  return blocking ? 'busy' : 'free';
+}
+
+function renderCategoryFilter(){
+  const sel = document.getElementById('categoryFilter');
+  const cats = [...new Set(games.map(g=>g.category))];
+  sel.innerHTML = '<option value="">ทุกหมวดหมู่</option>' + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+}
+
+function renderCatalog(){
+  const grid = document.getElementById('catalogGrid');
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const cat = document.getElementById('categoryFilter').value;
+  const list = games.filter(g => g.name.toLowerCase().includes(q) && (!cat || g.category===cat));
+  grid.innerHTML = list.map(g=>{
+    const freeCopies = g.copies.filter(c=>copyStatus(c)==='free').length;
+    const total = g.copies.length;
+    const avail = freeCopies>0;
+    return `
+    <div class="card-game">
+      <span class="icon">${g.icon}</span>
+      <span class="cat">${g.category}</span>
+      <h3>${g.name}</h3>
+      <div class="meta">${g.minP}-${g.maxP} ผู้เล่น · ~${g.playtime} นาที</div>
+      <div class="status-pill ${avail?'avail':'full'}">
+        <span class="dot"></span> ${avail? `ว่าง (${freeCopies}/${total} กล่อง)` : `หมดแล้ว (0/${total} กล่องว่าง)`}
+      </div>
+      <button class="btn btn-wood" onclick="openTimelineFor('${g.id}')">ดูตารางคิว →</button>
+    </div>`;
+  }).join('') || '<div class="empty-row">ไม่พบเกมที่ค้นหา</div>';
+}
+
+/* ===================== RENDER: TIMELINE ===================== */
+const DAY_START = 8, DAY_END = 22; // 08:00–22:00 window shown
+
+function renderGameSelect(){
+  const sel = document.getElementById('gameSelect');
+  sel.innerHTML = games.map(g=>`<option value="${g.id}">${g.icon} ${g.name}</option>`).join('');
+}
+
+function pctForTime(d){
+  const dayStart = todayAt(DAY_START,0), dayEnd = todayAt(DAY_END,0);
+  const clamped = Math.min(Math.max(d, dayStart), dayEnd);
+  return (clamped - dayStart) / (dayEnd - dayStart) * 100;
+}
+
+function renderTimeline(){
+  const gameId = document.getElementById('gameSelect').value;
+  const g = games.find(x=>x.id===gameId);
+  if(!g) return;
+  document.getElementById('gameBrief').innerHTML = `
+    <span class="icon">${g.icon}</span>
+    <div>
+      <h3>${g.name}</h3>
+      <div class="sub">${g.category} · ${g.minP}-${g.maxP} ผู้เล่น · ~${g.playtime} นาที/รอบ · ${g.copies.length} กล่อง</div>
+    </div>`;
+
+  const wrap = document.getElementById('tracksWrap');
+  const hours = [];
+  for(let h=DAY_START; h<=DAY_END; h+=2) hours.push(String(h).padStart(2,'0')+':00');
+
+  wrap.innerHTML = g.copies.map(copy=>{
+    const myBookings = bookings.filter(b=>b.copyId===copy.id && b.status!=='RETURNED' && b.status!=='CANCELLED');
+    const isFree = copyStatus(copy)==='free';
+    const blocksHtml = myBookings.map(b=>{
+      const left = pctForTime(b.start), right = pctForTime(b.end);
+      const width = Math.max(right-left, 2);
+      const label = `${fmtTime(b.start)}–${fmtTime(b.end)} · ${b.studentName.split(' ')[0]}`;
+      return `<div class="block ${b.status}" style="left:${left}%; width:${width}%;" title="${label} (${b.status})">${label}</div>`;
+    }).join('');
+    const nowPct = pctForTime(simNow);
+    const nowLine = `<div class="now-line" style="left:${nowPct}%"></div>`;
+    return `
+    <div class="copy-track">
+      <div class="copy-head">
+        <span class="name">${copy.label}</span>
+        <span class="state ${isFree?'free':'busy'}">${isFree? 'ว่าง' : 'ไม่ว่าง'}</span>
+      </div>
+      <div class="ruler">${hours.map(h=>`<span>${h}</span>`).join('')}</div>
+      <div class="track" data-copy="${copy.id}" data-game="${g.id}" onclick="trackClick(event,'${g.id}','${copy.id}')">
+        ${blocksHtml}${nowLine}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function trackClick(evt, gameId, copyId){
+  const track = evt.currentTarget;
+  const rect = track.getBoundingClientRect();
+  const ratio = (evt.clientX - rect.left) / rect.width;
+  const dayStart = todayAt(DAY_START,0), dayEnd = todayAt(DAY_END,0);
+  const clickedMs = dayStart.getTime() + ratio * (dayEnd - dayStart);
+  let start = new Date(clickedMs);
+  // snap to nearest 15 min
+  start.setMinutes(Math.round(start.getMinutes()/15)*15, 0, 0);
+  let end = new Date(start.getTime() + 60*60000); // default 1hr
+  openModal(gameId, copyId, start, end);
+}
+
+function fmtTime(d){ return d.toTimeString().slice(0,5); }
+
+/* ===================== MODAL ===================== */
+let modalCtx = null;
+function openModal(gameId, copyId, start, end){
+  modalCtx = {gameId, copyId};
+  const g = games.find(x=>x.id===gameId);
+  const copy = g.copies.find(c=>c.id===copyId);
+  document.getElementById('modalGameLabel').textContent = `${g.icon} ${g.name} · กล่อง ${copy.label}`;
+  document.getElementById('fStudentId').value = '';
+  document.getElementById('fStudentName').value = '';
+  document.getElementById('fStart').value = fmtTime(start);
+  document.getElementById('fEnd').value = fmtTime(end);
+  document.getElementById('modalErr').classList.remove('show');
+  document.getElementById('bookOverlay').classList.add('show');
+}
+function openTimelineFor(gameId){
+  document.getElementById('gameSelect').value = gameId;
+  switchTab('timeline');
+  renderTimeline();
+}
+function closeModal(){ document.getElementById('bookOverlay').classList.remove('show'); modalCtx=null; }
+
+function submitBooking(){
+  const errBox = document.getElementById('modalErr');
+  const studentId = document.getElementById('fStudentId').value.trim();
+  const studentName = document.getElementById('fStudentName').value.trim();
+  const [sh,sm] = document.getElementById('fStart').value.split(':').map(Number);
+  const [eh,em] = document.getElementById('fEnd').value.split(':').map(Number);
+  const start = todayAt(sh,sm), end = todayAt(eh,em);
+
+  const errMsg = validateBooking({studentId, studentName, gameId:modalCtx.gameId, copyId:modalCtx.copyId, start, end});
+  if(errMsg){
+    errBox.textContent = errMsg;
+    errBox.classList.add('show');
+    return;
+  }
+  bookings.push({
+    id:'BK-'+String(bookingSeq++).padStart(3,'0'),
+    gameId: modalCtx.gameId, copyId: modalCtx.copyId,
+    studentId, studentName, start, end, status:'RESERVED', actualReturn:null
+  });
+  closeModal();
+  toast(`จองสำเร็จ! ส่งอีเมลยืนยันให้ ${studentName} แล้ว`, false);
+  renderAll();
+}
+
+/* ===================== STAFF DASHBOARD ===================== */
+function statusLabel(s){
+  return {RESERVED:'RESERVED', IN_USE:'IN_USE', OVERDUE:'OVERDUE', RETURNED:'RETURNED', CANCELLED:'CANCELLED'}[s];
+}
+
+function renderStaff(){
+  recomputeOverdue();
+  const q = document.getElementById('staffSearch').value.trim().toLowerCase();
+  const tbody = document.getElementById('staffTableBody');
+  const rows = bookings
+    .slice()
+    .sort((a,b)=> a.start-b.start)
+    .filter(b=>{
+      const g = games.find(x=>x.id===b.gameId);
+      const hay = `${b.studentId} ${b.studentName} ${g.name}`.toLowerCase();
+      return hay.includes(q);
+    });
+
+  tbody.innerHTML = rows.map(b=>{
+    const g = games.find(x=>x.id===b.gameId);
+    let actions = '';
+    if(b.status==='RESERVED'){
+      actions = `<button class="btn btn-inuse btn-sm" onclick="markInUse('${b.id}')">ส่งมอบ</button>`;
+    } else if(b.status==='IN_USE' || b.status==='OVERDUE'){
+      actions = `<button class="btn btn-ok btn-sm" onclick="markReturned('${b.id}')">บันทึกคืนสำเร็จ</button>`;
+    } else if(b.status==='RETURNED'){
+      actions = `<span class="mono" style="font-size:11px;color:var(--parchment-dim)">คืนเมื่อ ${fmtTime(b.actualReturn)}</span>`;
+    }
+    return `
+    <tr>
+      <td>${g.icon} ${g.name}<br><span class="mono" style="font-size:11px;color:var(--parchment-dim)">${b.copyId}</span></td>
+      <td>${b.studentName}<br><span class="mono" style="font-size:11px;color:var(--parchment-dim)">${b.studentId}</span></td>
+      <td class="mono" style="font-size:12px;">${fmtTime(b.start)}–${fmtTime(b.end)}</td>
+      <td><span class="badge ${b.status}">${statusLabel(b.status)}</span></td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="5" class="empty-row">ไม่พบรายการจอง</td></tr>`;
+}
+
+function markInUse(id){
+  const b = bookings.find(x=>x.id===id);
+  b.status='IN_USE';
+  toast(`ส่งมอบ ${games.find(g=>g.id===b.gameId).name} (${b.copyId}) ให้ ${b.studentName} แล้ว`, false);
+  renderAll();
+}
+function markReturned(id){
+  const b = bookings.find(x=>x.id===id);
+  b.status='RETURNED';
+  b.actualReturn = new Date(simNow);
+  toast(`บันทึกคืนสำเร็จ — กล่อง ${b.copyId} ว่างพร้อมใช้งานทันที`, false);
+  renderAll();
+}
+
+/* ===================== TOAST ===================== */
+function toast(msg, isError){
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast' + (isError?' error':'');
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); }, 3200);
+}
+
+/* ===================== TABS & CLOCK ===================== */
+function switchTab(name){
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  document.querySelectorAll('section.view').forEach(s=>s.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+}
+document.querySelectorAll('nav.tabs button').forEach(b=>{
+  b.addEventListener('click', ()=>{ switchTab(b.dataset.tab); renderAll(); });
+});
+
+function toLocalInputValue(d){
+  const pad=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+document.getElementById('clockInput').addEventListener('change', (e)=>{
+  if(e.target.value){
+    simNow = new Date(e.target.value);
+    recomputeOverdue();
+    renderAll();
+  }
+});
+
+/* ===================== INIT ===================== */
+function renderAll(){
+  renderCatalog();
+  renderTimeline();
+  renderStaff();
+}
+
+document.getElementById('searchInput').addEventListener('input', renderCatalog);
+document.getElementById('categoryFilter').addEventListener('change', renderCatalog);
+document.getElementById('gameSelect').addEventListener('change', renderTimeline);
+document.getElementById('staffSearch').addEventListener('input', renderStaff);
+
+renderCategoryFilter();
+renderGameSelect();
+document.getElementById('clockInput').value = toLocalInputValue(simNow);
+seedData();
+renderAll();
+
+// live-ish clock tick (advances simulated time with real time unless user overrides)
+setInterval(()=>{
+  simNow = new Date(simNow.getTime() + 60000); // advance 1 min per tick
+  document.getElementById('clockInput').value = toLocalInputValue(simNow);
+  recomputeOverdue();
+  renderAll();
+}, 8000);
+</script>
+</body>
+</html>
