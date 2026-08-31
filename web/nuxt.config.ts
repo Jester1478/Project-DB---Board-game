@@ -3,7 +3,10 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   ssr: false,
-  css: ['~/assets/css/main.css'],
+  modules: ['@nuxtjs/tailwindcss'],
+  tailwindcss: {
+    cssPath: '~/assets/css/main.css'
+  },
   app: {
     head: {
       title: 'กดงูเหมือนกดไลค์ — ระบบจองบอร์ดเกม',
