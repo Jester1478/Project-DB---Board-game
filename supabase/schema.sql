@@ -34,7 +34,7 @@ CREATE TABLE USERS (
     First_Name          VARCHAR(100) NOT NULL,
     Last_Name           VARCHAR(100) NOT NULL,
     Email               VARCHAR(120) NOT NULL UNIQUE,
-    Phone               VARCHAR(20)
+    Phone               VARCHAR(10)
 );
 
 -- ============================================================
@@ -45,7 +45,7 @@ CREATE TABLE EMPLOYEE (
     First_Name          VARCHAR(100) NOT NULL,
     Last_Name           VARCHAR(100) NOT NULL,
     Email               VARCHAR(120) NOT NULL UNIQUE,
-    Phone               VARCHAR(20)
+    Phone               VARCHAR(10)
 );
 
 -- ============================================================
@@ -63,7 +63,7 @@ CREATE TABLE CATEGORY (
 -- are actually lent out live in GAME_COPY.
 -- ============================================================
 CREATE TABLE BOARD_GAME (
-    Game_ID             VARCHAR(20) PRIMARY KEY,
+    Game_ID             VARCHAR(50) PRIMARY KEY,
     Game_Name           VARCHAR(150) NOT NULL,
     Description         TEXT,
     Min_Players         INTEGER NOT NULL CHECK (Min_Players >= 1),
@@ -80,7 +80,7 @@ CREATE TABLE BOARD_GAME (
 -- BOARD_GAME and CATEGORY. Composite primary key.
 -- ============================================================
 CREATE TABLE GAME_CATEGORY (
-    Game_ID             VARCHAR(20) NOT NULL,
+    Game_ID             VARCHAR(50) NOT NULL,
     Categories_ID       VARCHAR(20) NOT NULL,
     CONSTRAINT PK_GAME_CATEGORY
         PRIMARY KEY (Game_ID, Categories_ID),
