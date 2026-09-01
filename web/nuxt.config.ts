@@ -9,7 +9,7 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'กดงูเหมือนกดไลค์ — ระบบจองบอร์ดเกม',
+      title: 'ระบบจัดการสต๊อกคิวและการจองบอร์ดเกม',
       htmlAttrs: { lang: 'th' },
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
