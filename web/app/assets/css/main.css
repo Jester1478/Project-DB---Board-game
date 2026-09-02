@@ -55,8 +55,8 @@ header.top{
   @apply bg-surface text-ink border border-border rounded-[6px] py-[5px] px-2 font-mono text-[12.5px];
 }
 .clock-box .lbl{ @apply text-muted text-[11.5px] uppercase tracking-[0.06em]; }
-.staff-link{ @apply text-[12.5px] text-muted border-b border-dashed border-border pb-[2px]; }
-.staff-link:hover{ @apply text-primary-dark border-primary; }
+.employee-link{ @apply text-[12.5px] text-muted border-b border-dashed border-border pb-[2px]; }
+.employee-link:hover{ @apply text-primary-dark border-primary; }
 
 main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-5 max-sm:px-4 max-sm:pb-[50px]; }
 @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
@@ -168,9 +168,9 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
 .hint{ @apply text-[11.5px] text-muted -mt-1; }
 .err{ @apply bg-overdue-soft text-[#B91C1C] border border-[rgba(229,72,77,0.3)] py-[9px] px-[11px] rounded-lg text-[12.5px] mb-3; }
 
-/* ===== Staff dashboard ===== */
-.staff-search{ @apply flex gap-[10px] mb-[18px]; }
-.staff-search input{
+/* ===== Employee dashboard ===== */
+.employee-search{ @apply flex gap-[10px] mb-[18px]; }
+.employee-search input{
   @apply flex-1 bg-surface border border-border text-ink py-[10px] px-[14px] rounded-lg text-[13.5px];
 }
 table.book-table{

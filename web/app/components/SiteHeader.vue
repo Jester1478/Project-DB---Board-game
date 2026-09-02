@@ -31,7 +31,7 @@ const clockValue = computed({
         <span class="lbl">เวลา</span>
         <input v-model="clockValue" type="datetime-local">
       </div>
-      <NuxtLink to="/staff" class="staff-link">สำหรับเจ้าหน้าที่ →</NuxtLink>
+      <NuxtLink to="/employee" class="employee-link">สำหรับเจ้าหน้าที่ →</NuxtLink>
     </div>
   </header>
 </template>

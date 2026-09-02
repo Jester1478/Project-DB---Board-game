@@ -14,9 +14,9 @@
 -- to keep working.
 --
 -- This is intentionally permissive and NOT safe for a real
--- deployment. Once there's real student/staff auth, replace
+-- deployment. Once there's real student/employee auth, replace
 -- these with policies scoped to auth.uid() (e.g. a student can
--- only insert/update their own bookings, only staff can call
+-- only insert/update their own bookings, only employees can call
 -- checkout/return).
 -- ============================================================
 

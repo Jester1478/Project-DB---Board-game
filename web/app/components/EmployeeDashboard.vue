@@ -45,7 +45,7 @@ function handleMarkReturned(id: string) {
       <h2>Employee Dashboard</h2>
       <p>ค้นหารายการจอง ส่งมอบเกม และบันทึกการรับคืน</p>
     </div>
-    <div class="staff-search">
+    <div class="employee-search">
       <input v-model="search" type="text" placeholder="ค้นหาด้วยรหัสนิสิต, ชื่อ, หรือชื่อเกม...">
     </div>
     <table class="book-table">

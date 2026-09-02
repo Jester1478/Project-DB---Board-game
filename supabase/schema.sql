@@ -125,7 +125,7 @@ CREATE TABLE GAME_COPY (
 -- lifecycle status of the loan.
 --
 -- Two separate foreign keys point at EMPLOYEE because the
--- staff member who hands the box over and the one who takes
+-- employee who hands the box over and the one who takes
 -- it back may be different people on different shifts.
 -- ============================================================
 CREATE TABLE BOOKING (
