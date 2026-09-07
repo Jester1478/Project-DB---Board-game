@@ -13,29 +13,37 @@ function fmtTime(d: Date) {
   return d.toTimeString().slice(0, 5)
 }
 
+/** "14:30" -> { h: 14, m: 30 }; falls back to 0 so a cleared field can't produce NaN. */
+function parseTime(value: string) {
+  const [h, m] = value.split(':').map(Number)
+  return { h: h ?? 0, m: m ?? 0 }
+}
+
 const game = getGame(props.gameId)!
 const firstFree = game.copies.find(c => copyStatus(c) === 'free')
 
-const selectedCopyId = ref(firstFree?.id ?? game.copies[0].id)
-const studentId = ref('')
-const studentName = ref('')
+const selectedCopyId = ref(firstFree?.id ?? game.copies[0]?.id ?? '')
+const firstName = ref('')
+const lastName = ref('')
+const email = ref('')
+const phone = ref('')
 const startTime = ref(fmtTime(simNow.value))
 const endTime = ref(fmtTime(new Date(simNow.value.getTime() + 60 * 60000)))
 const errorMessage = ref('')
 
 function submit() {
-  const [sh, sm] = startTime.value.split(':').map(Number)
-  const [eh, em] = endTime.value.split(':').map(Number)
-  const start = todayAt(sh, sm)
-  const end = todayAt(eh, em)
+  const from = parseTime(startTime.value)
+  const to = parseTime(endTime.value)
 
   const { error } = addBooking({
-    studentId: studentId.value.trim(),
-    studentName: studentName.value.trim(),
+    firstName: firstName.value,
+    lastName: lastName.value,
+    email: email.value,
+    phone: phone.value,
     gameId: props.gameId,
     copyId: selectedCopyId.value,
-    start,
-    end
+    start: todayAt(from.h, from.m),
+    end: todayAt(to.h, to.m)
   })
 
   if (error) {
@@ -43,7 +51,7 @@ function submit() {
     return
   }
 
-  addToast(`จองสำเร็จ! ส่งอีเมลยืนยันให้ ${studentName.value.trim()} แล้ว`, false)
+  addToast(`จองสำเร็จ! ส่งอีเมลยืนยันไปที่ ${email.value.trim()} แล้ว`, false)
   emit('close')
 }
 </script>
@@ -62,13 +70,23 @@ function submit() {
           </option>
         </select>
       </div>
-      <div class="field">
-        <label>รหัสนิสิต</label>
-        <input v-model="studentId" type="text" placeholder="เช่น 680XXXXX">
+      <div class="row2">
+        <div class="field">
+          <label>ชื่อ</label>
+          <input v-model="firstName" type="text" placeholder="ชื่อจริง">
+        </div>
+        <div class="field">
+          <label>นามสกุล</label>
+          <input v-model="lastName" type="text" placeholder="นามสกุล">
+        </div>
       </div>
       <div class="field">
-        <label>ชื่อ-นามสกุล</label>
-        <input v-model="studentName" type="text" placeholder="ชื่อผู้จอง">
+        <label>อีเมล</label>
+        <input v-model="email" type="email" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label>เบอร์โทร <span class="optional">(ไม่บังคับ)</span></label>
+        <input v-model="phone" type="tel" placeholder="08XXXXXXXX">
       </div>
       <div class="row2">
         <div class="field">

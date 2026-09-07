@@ -161,6 +161,7 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
 .modal .sub{ @apply text-[12.5px] text-muted mb-4; }
 .field{ @apply mb-3; }
 .field label{ @apply block text-xs font-semibold mb-[5px] text-ink; }
+.field label .optional{ @apply font-normal text-muted; }
 .field input, .field select{
   @apply w-full py-[9px] px-[10px] rounded-[7px] border border-border bg-surface font-sans text-[13.5px] text-ink;
 }

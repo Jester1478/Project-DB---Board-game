@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useBoardGameStore } from '~/composables/useBoardGameStore'
 import { useToasts } from '~/composables/useToasts'
 
-const { games, bookings, markInUse, markReturned } = useBoardGameStore()
+const { games, bookings, getUser, userLabel, markInUse, markReturned } = useBoardGameStore()
 const { addToast } = useToasts()
 
 const search = ref('')
@@ -19,7 +19,8 @@ const rows = computed(() => {
     .sort((a, b) => +a.start - +b.start)
     .filter(b => {
       const g = games.find(x => x.id === b.gameId)!
-      const hay = `${b.studentId} ${b.studentName} ${g.name}`.toLowerCase()
+      const u = getUser(b.userId)
+      const hay = `${u?.email ?? ''} ${u?.phone ?? ''} ${userLabel(b.userId)} ${g.name}`.toLowerCase()
       return hay.includes(q)
     })
 })
@@ -30,7 +31,7 @@ function gameFor(gameId: string) {
 
 function handleMarkInUse(id: string) {
   const b = markInUse(id)
-  if (b) addToast(`ส่งมอบ ${gameFor(b.gameId).name} (${b.copyId}) ให้ ${b.studentName} แล้ว`, false)
+  if (b) addToast(`ส่งมอบ ${gameFor(b.gameId).name} (${b.copyId}) ให้ ${userLabel(b.userId)} แล้ว`, false)
 }
 
 function handleMarkReturned(id: string) {
@@ -46,7 +47,7 @@ function handleMarkReturned(id: string) {
       <p>ค้นหารายการจอง ส่งมอบเกม และบันทึกการรับคืน</p>
     </div>
     <div class="employee-search">
-      <input v-model="search" type="text" placeholder="ค้นหาด้วยรหัสนิสิต, ชื่อ, หรือชื่อเกม...">
+      <input v-model="search" type="text" placeholder="ค้นหาด้วยชื่อ, อีเมล, เบอร์โทร, หรือชื่อเกม...">
     </div>
     <table class="book-table">
       <thead>
@@ -59,8 +60,8 @@ function handleMarkReturned(id: string) {
             <span class="mono dim">{{ b.copyId }}</span>
           </td>
           <td>
-            {{ b.studentName }}<br>
-            <span class="mono dim">{{ b.studentId }}</span>
+            {{ userLabel(b.userId) }}<br>
+            <span class="mono dim">{{ getUser(b.userId)?.email }}</span>
           </td>
           <td class="mono" style="font-size:12px;">{{ fmtTime(b.start) }}–{{ fmtTime(b.end) }}</td>
           <td><span class="badge" :class="b.status">{{ b.status }}</span></td>
