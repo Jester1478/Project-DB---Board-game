@@ -19,7 +19,9 @@ function goToDetail() {
 
 <template>
   <div class="card-game" role="button" tabindex="0" @click="goToDetail" @keyup.enter="goToDetail">
-    <div class="card-game-icon">{{ game.icon }}</div>
+    <div class="card-game-icon">
+      <GameImage :src="game.image" :icon="game.icon" :alt="game.name" />
+    </div>
     <span class="cat">{{ game.category }}</span>
     <h3>{{ game.name }}</h3>
     <div class="meta">{{ game.minP }}-{{ game.maxP }} ผู้เล่น · ~{{ game.playtime }} นาที</div>

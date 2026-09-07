@@ -12,6 +12,8 @@ export interface Game {
   id: string
   name: string
   icon: string
+  /** Path to a real image, e.g. '/games/catan.jpg' (file lives in web/public/games/). Falls back to `icon` when unset or the file is missing. */
+  image?: string
   category: string
   minP: number
   maxP: number

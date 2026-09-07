@@ -1,10 +1,3 @@
--- ============================================================
--- Optional seed data — mirrors the games currently hardcoded in
--- web/app/composables/useBoardGameStore.ts, so the database
--- starts with the same catalog the frontend already shows.
--- Run this after schema.sql, in the Supabase SQL Editor.
--- ============================================================
-
 INSERT INTO CATEGORY (Categories_ID, Categories_Name) VALUES
     ('CAT-STRAT', 'Strategy'),
     ('CAT-PARTY', 'Party'),

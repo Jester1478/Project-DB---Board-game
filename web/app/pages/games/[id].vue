@@ -24,7 +24,9 @@ function fmtTime(d: Date) {
 
     <!-- SECTION 1: hero + book button -->
     <section class="game-hero">
-      <div class="game-hero-image">{{ game.icon }}</div>
+      <div class="game-hero-image">
+        <GameImage :src="game.image" :icon="game.icon" :alt="game.name" />
+      </div>
       <div class="game-hero-info">
         <span class="cat">{{ game.category }}</span>
         <h2>{{ game.name }}</h2>
