@@ -274,13 +274,27 @@ function createStore() {
     return b
   }
 
+  /**
+   * The clock follows the device's real local time. Setting it by hand pauses that
+   * (so an Overdue state can be demonstrated) until resetToRealTime() is called.
+   */
+  const isTimeOverridden = ref(false)
+
+  function syncToRealTime() {
+    if (isTimeOverridden.value) return
+    simNow.value = new Date()
+    recomputeOverdue()
+  }
+
   function setSimNow(d: Date) {
+    isTimeOverridden.value = true
     simNow.value = d
     recomputeOverdue()
   }
 
-  function tick(minutes = 1) {
-    simNow.value = new Date(simNow.value.getTime() + minutes * 60000)
+  function resetToRealTime() {
+    isTimeOverridden.value = false
+    simNow.value = new Date()
     recomputeOverdue()
   }
 
@@ -293,6 +307,7 @@ function createStore() {
     getUser,
     userLabel,
     simNow,
+    isTimeOverridden,
     todayAt,
     copyStatus,
     getGame,
@@ -302,7 +317,8 @@ function createStore() {
     markInUse,
     markReturned,
     setSimNow,
-    tick,
+    syncToRealTime,
+    resetToRealTime,
     recomputeOverdue
   }
 }

@@ -55,6 +55,11 @@ header.top{
   @apply bg-surface text-ink border border-border rounded-[6px] py-[5px] px-2 font-mono text-[12.5px];
 }
 .clock-box .lbl{ @apply text-muted text-[11.5px] uppercase tracking-[0.06em]; }
+.clock-box .tz{ @apply text-muted text-[11px]; }
+.clock-box .tz-reset{
+  @apply text-[11px] text-overdue bg-overdue-soft border-none rounded-md px-2 py-1 cursor-pointer font-sans;
+}
+.clock-box .tz-reset:hover{ @apply underline; }
 .employee-link{ @apply text-[12.5px] text-muted border-b border-dashed border-border pb-[2px]; }
 .employee-link:hover{ @apply text-primary-dark border-primary; }
 

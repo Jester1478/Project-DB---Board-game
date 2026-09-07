@@ -2,11 +2,14 @@
 import { onBeforeUnmount, onMounted } from 'vue'
 import { useBoardGameStore } from '~/composables/useBoardGameStore'
 
-const { tick } = useBoardGameStore()
+const { syncToRealTime } = useBoardGameStore()
 
+// Keep the clock on the device's real local time (and re-evaluate Overdue).
+// 10s keeps the displayed minute honest without noticeable cost.
 let timer: ReturnType<typeof setInterval> | undefined
 onMounted(() => {
-  timer = setInterval(() => tick(1), 8000)
+  syncToRealTime()
+  timer = setInterval(syncToRealTime, 10_000)
 })
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer)

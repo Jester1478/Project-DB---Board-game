@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useBoardGameStore } from '~/composables/useBoardGameStore'
 import { useToasts } from '~/composables/useToasts'
+
+// Opening hours, in 30-minute slots.
+const DAY_START = 8
+const DAY_END = 22
+const SLOT_MINUTES = 30
 
 const props = defineProps<{ gameId: string }>()
 const emit = defineEmits<{ (e: 'close'): void }>()
@@ -19,6 +24,31 @@ function parseTime(value: string) {
   return { h: h ?? 0, m: m ?? 0 }
 }
 
+function toMinutes(value: string) {
+  const { h, m } = parseTime(value)
+  return h * 60 + m
+}
+
+function fromMinutes(total: number) {
+  const h = Math.floor(total / 60)
+  const m = total % 60
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
+/** Every 30-minute mark between opening and closing time. */
+const allSlots = computed(() => {
+  const slots: string[] = []
+  for (let m = DAY_START * 60; m <= DAY_END * 60; m += SLOT_MINUTES) slots.push(fromMinutes(m))
+  return slots
+})
+
+/** The first slot at or after `now`, so the default start isn't already in the past. */
+function nextSlotFrom(d: Date) {
+  const mins = d.getHours() * 60 + d.getMinutes()
+  const rounded = Math.ceil(mins / SLOT_MINUTES) * SLOT_MINUTES
+  return fromMinutes(Math.min(Math.max(rounded, DAY_START * 60), DAY_END * 60 - SLOT_MINUTES))
+}
+
 const game = getGame(props.gameId)!
 const firstFree = game.copies.find(c => copyStatus(c) === 'free')
 
@@ -27,9 +57,22 @@ const firstName = ref('')
 const lastName = ref('')
 const email = ref('')
 const phone = ref('')
-const startTime = ref(fmtTime(simNow.value))
-const endTime = ref(fmtTime(new Date(simNow.value.getTime() + 60 * 60000)))
+const startTime = ref(nextSlotFrom(simNow.value))
 const errorMessage = ref('')
+
+/** BR-02: 30 minutes minimum, 4 hours maximum — so only those end slots are offered. */
+const endSlots = computed(() => {
+  const from = toMinutes(startTime.value)
+  return allSlots.value.filter(s => {
+    const mins = toMinutes(s) - from
+    return mins >= SLOT_MINUTES && mins <= 240
+  })
+})
+
+const endTime = ref('')
+watch(endSlots, slots => {
+  if (!slots.includes(endTime.value)) endTime.value = slots[0] ?? ''
+}, { immediate: true })
 
 function submit() {
   const from = parseTime(startTime.value)
@@ -91,14 +134,18 @@ function submit() {
       <div class="row2">
         <div class="field">
           <label>เวลาเริ่ม</label>
-          <input v-model="startTime" type="time">
+          <select v-model="startTime">
+            <option v-for="slot in allSlots" :key="slot" :value="slot">{{ slot }}</option>
+          </select>
         </div>
         <div class="field">
           <label>เวลาสิ้นสุด</label>
-          <input v-model="endTime" type="time">
+          <select v-model="endTime">
+            <option v-for="slot in endSlots" :key="slot" :value="slot">{{ slot }}</option>
+          </select>
         </div>
       </div>
-      <p class="hint">* จองได้ครั้งละ 30 นาที – 4 ชั่วโมง และห้ามจองซ้อนกับคิวอื่น (BR-01–BR-04)</p>
+      <p class="hint">* เลือกได้ทีละ 30 นาที เปิดให้จอง 08:00–22:00 · ครั้งละ 30 นาที – 4 ชั่วโมง (BR-01–BR-04)</p>
       <div class="modal-actions">
         <button class="btn btn-ghost" @click="emit('close')">ยกเลิก</button>
         <button class="btn btn-primary" @click="submit">ยืนยันการจอง</button>

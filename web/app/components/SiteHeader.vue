@@ -2,7 +2,10 @@
 import { computed } from 'vue'
 import { useBoardGameStore } from '~/composables/useBoardGameStore'
 
-const { simNow, setSimNow } = useBoardGameStore()
+const { simNow, setSimNow, isTimeOverridden, resetToRealTime } = useBoardGameStore()
+
+// e.g. "Asia/Bangkok" — makes it obvious which clock the times on screen belong to.
+const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
 function toLocalInputValue(d: Date) {
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -30,6 +33,10 @@ const clockValue = computed({
       <div class="clock-box">
         <span class="lbl">เวลา</span>
         <input v-model="clockValue" type="datetime-local">
+        <span v-if="!isTimeOverridden" class="tz">{{ timeZone }}</span>
+        <button v-else class="tz-reset" title="กลับไปใช้เวลาจริง" @click="resetToRealTime()">
+          จำลองเวลา · กลับไปเวลาจริง
+        </button>
       </div>
       <NuxtLink to="/employee" class="employee-link">สำหรับเจ้าหน้าที่ →</NuxtLink>
     </div>
