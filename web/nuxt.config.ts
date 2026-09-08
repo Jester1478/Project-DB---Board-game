@@ -3,9 +3,13 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   ssr: false,
-  modules: ['@nuxtjs/tailwindcss'],
+  modules: ['@nuxtjs/tailwindcss', '@nuxtjs/supabase'],
   tailwindcss: {
     cssPath: '~/assets/css/main.css'
+  },
+  supabase: {
+    // No login flow in this app, so don't let the module redirect visitors to /login.
+    redirect: false
   },
   app: {
     head: {

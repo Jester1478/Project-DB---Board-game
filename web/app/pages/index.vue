@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useBoardGameStore } from '~/composables/useBoardGameStore'
 
-const { games } = useBoardGameStore()
+const { games, loading, loadError } = useBoardGameStore()
 
 const search = ref('')
 const category = ref('')
@@ -28,7 +28,9 @@ const filteredGames = computed(() => {
         <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
       </select>
     </div>
-    <div class="grid">
+    <p v-if="loadError" class="err">โหลดข้อมูลจากฐานข้อมูลไม่สำเร็จ: {{ loadError }}</p>
+    <p v-else-if="loading" class="empty-row">กำลังโหลดข้อมูลเกม...</p>
+    <div v-else class="grid">
       <GameCard v-for="g in filteredGames" :key="g.id" :game="g" />
       <div v-if="filteredGames.length === 0" class="empty-row">ไม่พบเกมที่ค้นหา</div>
     </div>

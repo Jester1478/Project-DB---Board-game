@@ -6,7 +6,7 @@ import { useBoardGameStore } from '~/composables/useBoardGameStore'
 const route = useRoute()
 const gameId = computed(() => String(route.params.id))
 
-const { getGame, copyStatus, bookingsForCopy } = useBoardGameStore()
+const { getGame, copyStatus, bookingsForCopy, loading } = useBoardGameStore()
 
 const game = computed(() => getGame(gameId.value))
 
@@ -72,6 +72,7 @@ function fmtTime(d: Date) {
     <BookingModal v-if="showBookingModal" :game-id="game.id" @close="showBookingModal = false" />
   </main>
   <main v-else>
-    <p class="empty-row">ไม่พบเกมนี้</p>
+    <NuxtLink to="/" class="back-link">← กลับไปหน้าแคตตาล็อก</NuxtLink>
+    <p class="empty-row">{{ loading ? 'กำลังโหลดข้อมูลเกม...' : 'ไม่พบเกมนี้' }}</p>
   </main>
 </template>

@@ -74,11 +74,15 @@ watch(endSlots, slots => {
   if (!slots.includes(endTime.value)) endTime.value = slots[0] ?? ''
 }, { immediate: true })
 
-function submit() {
+const saving = ref(false)
+
+async function submit() {
+  if (saving.value) return
   const from = parseTime(startTime.value)
   const to = parseTime(endTime.value)
 
-  const { error } = addBooking({
+  saving.value = true
+  const { error } = await addBooking({
     firstName: firstName.value,
     lastName: lastName.value,
     email: email.value,
@@ -88,6 +92,8 @@ function submit() {
     start: todayAt(from.h, from.m),
     end: todayAt(to.h, to.m)
   })
+
+  saving.value = false
 
   if (error) {
     errorMessage.value = error
@@ -147,8 +153,10 @@ function submit() {
       </div>
       <p class="hint">* เลือกได้ทีละ 30 นาที เปิดให้จอง 08:00–22:00 · ครั้งละ 30 นาที – 4 ชั่วโมง (BR-01–BR-04)</p>
       <div class="modal-actions">
-        <button class="btn btn-ghost" @click="emit('close')">ยกเลิก</button>
-        <button class="btn btn-primary" @click="submit">ยืนยันการจอง</button>
+        <button class="btn btn-ghost" :disabled="saving" @click="emit('close')">ยกเลิก</button>
+        <button class="btn btn-primary" :disabled="saving" @click="submit">
+          {{ saving ? 'กำลังบันทึก...' : 'ยืนยันการจอง' }}
+        </button>
       </div>
     </div>
   </div>

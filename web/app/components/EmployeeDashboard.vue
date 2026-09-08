@@ -18,25 +18,28 @@ const rows = computed(() => {
     .slice()
     .sort((a, b) => +a.start - +b.start)
     .filter(b => {
-      const g = games.find(x => x.id === b.gameId)!
       const u = getUser(b.userId)
-      const hay = `${u?.email ?? ''} ${u?.phone ?? ''} ${userLabel(b.userId)} ${g.name}`.toLowerCase()
+      const hay = `${u?.email ?? ''} ${u?.phone ?? ''} ${userLabel(b.userId)} ${gameFor(b.gameId).name}`.toLowerCase()
       return hay.includes(q)
     })
 })
 
+const UNKNOWN_GAME = { name: '—', icon: '🎲' }
+
 function gameFor(gameId: string) {
-  return games.find(x => x.id === gameId)!
+  return games.find(x => x.id === gameId) ?? UNKNOWN_GAME
 }
 
-function handleMarkInUse(id: string) {
-  const b = markInUse(id)
+async function handleMarkInUse(id: string) {
+  const b = await markInUse(id)
   if (b) addToast(`ส่งมอบ ${gameFor(b.gameId).name} (${b.copyId}) ให้ ${userLabel(b.userId)} แล้ว`, false)
+  else addToast('บันทึกไม่สำเร็จ กรุณาลองใหม่', true)
 }
 
-function handleMarkReturned(id: string) {
-  const b = markReturned(id)
+async function handleMarkReturned(id: string) {
+  const b = await markReturned(id)
   if (b) addToast(`บันทึกคืนสำเร็จ — กล่อง ${b.copyId} ว่างพร้อมใช้งานทันที`, false)
+  else addToast('บันทึกไม่สำเร็จ กรุณาลองใหม่', true)
 }
 </script>
 
