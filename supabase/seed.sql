@@ -1,9 +1,9 @@
-INSERT INTO CATEGORY (Categories_ID, Categories_Name) VALUES
+INSERT INTO public.category (category_id, category_name) VALUES
     ('CAT-STRAT', 'Strategy'),
     ('CAT-PARTY', 'Party'),
     ('CAT-FAM',   'Family');
 
-INSERT INTO BOARD_GAME (Game_ID, Game_Name, Description, Min_Players, Max_Players, Play_Time_Mins) VALUES
+INSERT INTO public.board_game (game_id, game_name, description, min_players, max_players, play_time_mins) VALUES
     ('GM-CATAN', 'Catan',           'สร้างถนน หมู่บ้าน และเมือง แข่งกันสะสมแต้มชัยชนะจากทรัพยากร', 3, 4, 90),
     ('GM-CODE',  'Codenames',       'สองทีมทายคำใบ้จากหัวหน้าสายลับ ระวังคำมือสังหาร',              4, 8, 20),
     ('GM-SPLEN', 'Splendor',        'เก็บโทเคนอัญมณีเพื่อซื้อการ์ดพัฒนาและสะสมแต้มเกียรติยศ',        2, 4, 30),
@@ -11,7 +11,7 @@ INSERT INTO BOARD_GAME (Game_ID, Game_Name, Description, Min_Players, Max_Player
     ('GM-TTR',   'Ticket to Ride',  'เก็บการ์ดรถไฟเพื่อยึดครองเส้นทางและทำภารกิจให้สำเร็จ',           2, 5, 60),
     ('GM-SUSHI', 'Sushi Go!',       'ดราฟต์การ์ดซูชิแต่ละรอบเพื่อทำคอมโบให้ได้แต้มสูงสุด',            2, 5, 20);
 
-INSERT INTO GAME_CATEGORY (Game_ID, Categories_ID) VALUES
+INSERT INTO public.game_category (game_id, category_id) VALUES
     ('GM-CATAN', 'CAT-STRAT'),
     ('GM-SPLEN', 'CAT-STRAT'),
     ('GM-CODE',  'CAT-PARTY'),
@@ -19,7 +19,7 @@ INSERT INTO GAME_CATEGORY (Game_ID, Categories_ID) VALUES
     ('GM-TTR',   'CAT-FAM'),
     ('GM-SUSHI', 'CAT-FAM');
 
-INSERT INTO GAME_COPY (Copy_ID, Copy_Code, Condition_Status, Copy_Numbers, Game_ID) VALUES
+INSERT INTO public.game_copy (copy_id, copy_code, condition_status, copy_number, game_id) VALUES
     ('CP-CATAN-01', 'CATAN-01', 'Good', 1, 'GM-CATAN'),
     ('CP-CATAN-02', 'CATAN-02', 'Good', 2, 'GM-CATAN'),
     ('CP-CODE-01',  'CODE-01',  'Good', 1, 'GM-CODE'),
