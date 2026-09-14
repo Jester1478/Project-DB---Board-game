@@ -29,7 +29,7 @@ function fmtDate(d: Date) {
 const SECTIONS: { key: string, title: string, subtitle: string, statuses: BookingStatus[] }[] = [
   { key: 'pending', title: 'กำลังดำเนินการ', subtitle: 'จองแล้ว รอส่งมอบเกมให้ลูกค้า', statuses: ['Reserved'] },
   { key: 'out', title: 'รอคืน', subtitle: 'ส่งมอบแล้ว ลูกค้ากำลังเล่นหรือเกินเวลาคืน', statuses: ['In_Use', 'Overdue'] },
-  { key: 'done', title: 'ส่งมอบแล้ว', subtitle: 'คืนเกมเรียบร้อยแล้ว', statuses: ['Returned', 'Cancelled'] }
+  { key: 'done', title: 'คืนสำเร็จ', subtitle: 'คืนเกมเรียบร้อยแล้ว', statuses: ['Returned', 'Cancelled'] }
 ]
 
 /**
