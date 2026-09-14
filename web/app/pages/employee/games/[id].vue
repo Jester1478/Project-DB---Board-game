@@ -11,6 +11,15 @@ const route = useRoute()
 const gameId = computed(() => String(route.params.id))
 const isNew = computed(() => gameId.value === 'new')
 
+// Pages that link here (e.g. a category page) pass ?from= so "back" returns there.
+// Only in-app employee paths are honoured, so the link can't point off-site.
+const backTo = computed(() => {
+  const from = String(route.query.from ?? '')
+  return from.startsWith('/employee/') ? from : '/employee/games'
+})
+const backLabel = computed(() =>
+  backTo.value.startsWith('/employee/categories/') ? '← กลับไปหน้าหมวดหมู่' : '← กลับไปหน้าจัดการเกม')
+
 const {
   categories, loading, getGame, createGame, updateGame, deleteGame, gameHasHistory, activeBookingCountForGame
 } = useBoardGameStore()
@@ -56,6 +65,14 @@ watch(game, g => {
   filledFor.value = g.id
 }, { immediate: true })
 
+// "+ สร้างเกมใหม่ในหมวดนี้" arrives with ?category=; tick it once categories have loaded.
+watch(() => categories.length, () => {
+  const preset = String(route.query.category ?? '')
+  if (isNew.value && preset && !form.value.categoryIds.length && categories.some(c => c.id === preset)) {
+    form.value.categoryIds = [preset]
+  }
+}, { immediate: true })
+
 const activeCount = computed(() => (game.value ? activeBookingCountForGame(game.value.id) : 0))
 const hasHistory = computed(() => !!game.value && gameHasHistory(game.value.id))
 const canDelete = computed(() => !!game.value && activeCount.value === 0)
@@ -87,7 +104,7 @@ async function save() {
     }
     if (error) addToast(`สร้างเกมแล้ว แต่ตั้งค่าบางส่วนไม่สำเร็จ: ${error}`, true)
     else addToast(`เพิ่มเกม "${form.value.name.trim()}" แล้ว`, false)
-    await navigateTo(`/employee/games/${id}`)
+    await navigateTo({ path: `/employee/games/${id}`, query: route.query.from ? { from: backTo.value } : {} })
     return
   }
 
@@ -117,13 +134,13 @@ async function remove() {
     return
   }
   addToast(archived ? `ลบเกม "${name}" แล้ว ประวัติการจองยังเก็บไว้` : `ลบเกม "${name}" แล้ว`, false)
-  await navigateTo('/employee/games')
+  await navigateTo(backTo.value)
 }
 </script>
 
 <template>
   <main>
-    <NuxtLink to="/employee/games" class="back-link">← กลับไปหน้าจัดการเกม</NuxtLink>
+    <NuxtLink :to="backTo" class="back-link">{{ backLabel }}</NuxtLink>
 
     <p v-if="!isNew && !game" class="empty-row">{{ loading ? 'กำลังโหลดข้อมูลเกม...' : 'ไม่พบเกมนี้' }}</p>
 

@@ -78,7 +78,7 @@ async function remove(category: Category) {
   <main>
     <div class="section-head">
       <h2>หมวดหมู่</h2>
-      <p>เพิ่ม เปลี่ยนชื่อ หรือลบหมวดหมู่เกม เลือกหมวดหมู่ให้แต่ละเกมได้ที่หน้าแก้ไขเกม</p>
+      <p>กดชื่อหมวดหมู่เพื่อดูเกมในหมวดนั้น เพิ่มหรือเอาเกมออก และแก้ไขเกมจากในนั้นได้</p>
     </div>
 
     <form class="panel form-panel" @submit.prevent="add">
@@ -109,7 +109,7 @@ async function remove(category: Category) {
               @keyup.enter="saveRename(c)"
               @keyup.esc="cancelRename"
             >
-            <template v-else>{{ c.name }}</template>
+            <NuxtLink v-else :to="`/employee/categories/${c.id}`" class="name-link">{{ c.name }}</NuxtLink>
           </td>
           <td>{{ categoryGameCount(c.id) }} เกม</td>
           <td class="cell-right">
@@ -118,6 +118,7 @@ async function remove(category: Category) {
               <button class="btn btn-ghost btn-sm" type="button" :disabled="busy" @click="cancelRename">ยกเลิก</button>
             </div>
             <div v-else class="cell-actions">
+              <NuxtLink :to="`/employee/categories/${c.id}`" class="btn btn-primary btn-sm">ดูเกม</NuxtLink>
               <button class="btn btn-ghost btn-sm" type="button" :disabled="busy || !!editingId" @click="startRename(c)">เปลี่ยนชื่อ</button>
               <button class="btn btn-ghost btn-sm" type="button" :disabled="busy || !!editingId" @click="remove(c)">ลบ</button>
             </div>

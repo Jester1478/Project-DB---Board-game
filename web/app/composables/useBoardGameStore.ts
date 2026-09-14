@@ -180,6 +180,7 @@ function messageForCatalogError(err: DbError, whenReferenced = COPY_HAS_HISTORY)
   }
   if (detail.includes('chk_board_game_player_range')) return 'จำนวนผู้เล่นสูงสุดต้องไม่น้อยกว่าขั้นต่ำ'
   if (err.code === '23505' && detail.includes('category_name')) return 'มีหมวดหมู่ชื่อนี้อยู่แล้ว'
+  if (err.code === '23505' && detail.includes('pk_game_category')) return 'เกมนี้อยู่ในหมวดหมู่นี้แล้ว'
   if (err.code === '23505') return 'รหัสเกมหรือรหัสกล่องซ้ำกับที่มีอยู่ กรุณาลองใหม่อีกครั้ง'
   if (err.code === '22001') return 'ข้อมูลยาวเกินกว่าที่ระบบรองรับ'
   return `บันทึกข้อมูลไม่สำเร็จ: ${err.message ?? 'ไม่ทราบสาเหตุ'}`
@@ -770,6 +771,26 @@ function createStore(supabase: SupabaseClient) {
     }
   }
 
+  /** Adds one game_category row, leaving the game's other categories as they are. */
+  async function addGameToCategory(gameId: string, categoryId: string): Promise<{ error: string | null }> {
+    const { data, error } = await supabase
+      .from('game_category').insert({ game_id: gameId, category_id: categoryId }).select('game_id')
+    if (error) return { error: messageForCatalogError(error) }
+    if (!data?.length) return { error: NO_CATALOG_PERMISSION }
+    await loadAll()
+    return { error: null }
+  }
+
+  /** Removes one game_category row; the game itself is untouched. */
+  async function removeGameFromCategory(gameId: string, categoryId: string): Promise<{ error: string | null }> {
+    const { data, error } = await supabase
+      .from('game_category').delete().eq('game_id', gameId).eq('category_id', categoryId).select('game_id')
+    if (error) return { error: messageForCatalogError(error) }
+    if (!data?.length) return { error: NO_CATALOG_PERMISSION }
+    await loadAll()
+    return { error: null }
+  }
+
   /** Games are kept; only their link to this category goes (game_category is ON DELETE CASCADE). */
   async function deleteCategory(categoryId: string): Promise<{ error: string | null }> {
     const { data, error } = await supabase.from('category').delete().eq('category_id', categoryId).select('category_id')
@@ -865,6 +886,8 @@ function createStore(supabase: SupabaseClient) {
     activeBookingCountForGame,
     createCategory,
     renameCategory,
+    addGameToCategory,
+    removeGameFromCategory,
     deleteCategory,
     archivedGames,
     restoreGame,

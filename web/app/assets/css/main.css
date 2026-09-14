@@ -244,6 +244,12 @@ footer{ @apply text-center p-5 text-muted text-[11.5px]; }
 .stock-hint{ @apply mt-3; }
 .dim-text{ @apply text-[12.5px] text-muted; margin: 2px 0 0; }
 .cell-right{ text-align: right; }
+.name-link{ @apply text-ink font-semibold border-b border-dashed border-border; }
+.name-link:hover{ @apply text-primary-dark border-primary; }
+.field-label{ @apply block text-xs font-semibold mb-2 text-ink; }
+.inline-select{
+  @apply flex-1 min-w-[200px] py-[9px] px-[10px] rounded-[7px] border border-border bg-surface font-sans text-[13.5px] text-ink;
+}
 .cell-actions{ @apply flex gap-2 justify-end flex-wrap; }
 .cell-input{
   @apply w-full max-w-[320px] py-[6px] px-2 rounded-[7px] border border-border bg-surface text-[13.5px] text-ink;
