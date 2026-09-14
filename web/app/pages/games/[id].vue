@@ -8,7 +8,11 @@ const gameId = computed(() => String(route.params.id))
 
 const { getGame, usableCopies, copyStatus, bookingsForCopy, loading } = useBoardGameStore()
 
-const game = computed(() => getGame(gameId.value))
+// An archived game's old link lands on "ไม่พบเกมนี้" rather than a bookable page.
+const game = computed(() => {
+  const g = getGame(gameId.value)
+  return g && !g.archived ? g : undefined
+})
 // Damaged or lost boxes are hidden from customers entirely.
 const copies = computed(() => (game.value ? usableCopies(game.value) : []))
 

@@ -39,6 +39,10 @@ function gameFor(gameId: string) {
   return games.find(x => x.id === gameId) ?? UNKNOWN_GAME
 }
 
+function isArchived(gameId: string) {
+  return games.find(x => x.id === gameId)?.archived ?? false
+}
+
 const NOT_SAVED = 'บันทึกไม่สำเร็จ — สิทธิ์เจ้าหน้าที่อาจหมดอายุ กรุณาเข้าสู่ระบบใหม่'
 
 async function handleMarkInUse(id: string) {
@@ -72,7 +76,8 @@ async function handleMarkReturned(id: string) {
       <tbody>
         <tr v-for="b in rows" :key="b.id">
           <td>
-            {{ gameFor(b.gameId).icon }} {{ gameFor(b.gameId).name }}<br>
+            {{ gameFor(b.gameId).icon }} {{ gameFor(b.gameId).name }}
+            <span v-if="isArchived(b.gameId)" class="dim">(ลบแล้ว)</span><br>
             <span class="mono dim">{{ copyLabel(b.copyId) }}</span>
           </td>
           <td>

@@ -39,6 +39,7 @@ CREATE TABLE public.board_game (
     play_time_mins INTEGER NOT NULL CHECK (play_time_mins > 0),
     icon           VARCHAR(16) NOT NULL DEFAULT '🎲',
     image_url      TEXT,
+    deleted_at     TIMESTAMP,
 
     CONSTRAINT chk_board_game_player_range
         CHECK (max_players >= min_players)

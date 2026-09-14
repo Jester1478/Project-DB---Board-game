@@ -5,13 +5,13 @@ import type { Game } from '~/composables/useBoardGameStore'
 
 definePageMeta({ layout: 'employee', middleware: 'employee' })
 
-const { games, loading, loadError } = useBoardGameStore()
+const { catalogGames, loading, loadError } = useBoardGameStore()
 
 const search = ref('')
 
 const rows = computed(() => {
   const q = search.value.trim().toLowerCase()
-  return games.filter(g => `${g.name} ${categoryNames(g)}`.toLowerCase().includes(q))
+  return catalogGames.value.filter(g => `${g.name} ${categoryNames(g)}`.toLowerCase().includes(q))
 })
 
 function categoryNames(game: Game) {

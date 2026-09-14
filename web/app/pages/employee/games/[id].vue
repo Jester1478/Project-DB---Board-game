@@ -11,10 +11,16 @@ const route = useRoute()
 const gameId = computed(() => String(route.params.id))
 const isNew = computed(() => gameId.value === 'new')
 
-const { categories, loading, getGame, createGame, updateGame, deleteGame, gameHasHistory } = useBoardGameStore()
+const {
+  categories, loading, getGame, createGame, updateGame, deleteGame, gameHasHistory, activeBookingCountForGame
+} = useBoardGameStore()
 const { addToast } = useToasts()
 
-const game = computed(() => (isNew.value ? undefined : getGame(gameId.value)))
+const game = computed(() => {
+  if (isNew.value) return undefined
+  const g = getGame(gameId.value)
+  return g && !g.archived ? g : undefined
+})
 
 const form = ref({
   name: '',
@@ -50,7 +56,9 @@ watch(game, g => {
   filledFor.value = g.id
 }, { immediate: true })
 
-const canDelete = computed(() => !!game.value && !gameHasHistory(game.value.id))
+const activeCount = computed(() => (game.value ? activeBookingCountForGame(game.value.id) : 0))
+const hasHistory = computed(() => !!game.value && gameHasHistory(game.value.id))
+const canDelete = computed(() => !!game.value && activeCount.value === 0)
 
 function toInput(): GameInput {
   return {
@@ -96,16 +104,19 @@ async function save() {
 async function remove() {
   if (!game.value || deleting.value) return
   const name = game.value.name
-  if (!confirm(`ลบเกม "${name}" พร้อมกล่องทั้งหมด ${game.value.copies.length} กล่อง?\nลบแล้วกู้คืนไม่ได้`)) return
+  const effect = hasHistory.value
+    ? 'เกมจะหายไปจากหน้าเว็บ แต่ประวัติการจองเดิมยังเก็บไว้'
+    : `ลบพร้อมกล่อง ${game.value.copies.length} กล่อง หมวดหมู่ และวิธีเล่น`
+  if (!confirm(`ลบเกม "${name}"?\n${effect}\nกู้คืนจากหน้าเว็บไม่ได้`)) return
 
   deleting.value = true
-  const { error } = await deleteGame(game.value.id)
+  const { error, archived } = await deleteGame(game.value.id)
   deleting.value = false
   if (error) {
     addToast(error, true)
     return
   }
-  addToast(`ลบเกม "${name}" แล้ว`, false)
+  addToast(archived ? `ลบเกม "${name}" แล้ว ประวัติการจองยังเก็บไว้` : `ลบเกม "${name}" แล้ว`, false)
   await navigateTo('/employee/games')
 }
 </script>
@@ -184,11 +195,14 @@ async function remove() {
 
       <section v-if="game" class="panel form-panel danger-zone">
         <h3>ลบเกม</h3>
-        <p v-if="canDelete" class="dim-text">ลบเกมนี้พร้อมกล่อง หมวดหมู่ และวิธีเล่นทั้งหมด ลบแล้วกู้คืนไม่ได้</p>
-        <p v-else class="dim-text">
-          ลบไม่ได้ เพราะมีกล่องที่เคยถูกจองแล้ว ต้องเก็บประวัติการจองไว้
-          ถ้าจะเลิกให้บริการ ให้เปลี่ยนสภาพทุกกล่องเป็น "ชำรุด" หรือ "สูญหาย" แทน
+        <p v-if="!canDelete" class="dim-text">
+          ลบไม่ได้ตอนนี้ เพราะยังมีการจองที่ยังไม่จบ {{ activeCount }} รายการ (จองไว้ กำลังใช้ หรือเกินกำหนด)
+          ลบได้เมื่อการจองเหล่านั้นคืนเกมครบแล้ว
         </p>
+        <p v-else-if="hasHistory" class="dim-text">
+          เกมนี้เคยมีการจอง เมื่อลบ เกมจะหายไปจากหน้าลูกค้าและหน้าจัดการเกม แต่ประวัติการจองเดิมยังเก็บไว้ครบ
+        </p>
+        <p v-else class="dim-text">ลบเกมนี้พร้อมกล่อง หมวดหมู่ และวิธีเล่นทั้งหมด ลบแล้วกู้คืนไม่ได้</p>
         <button class="btn btn-danger btn-sm" type="button" :disabled="!canDelete || deleting" @click="remove">
           {{ deleting ? 'กำลังลบ...' : 'ลบเกมนี้' }}
         </button>

@@ -1,4 +1,4 @@
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Matches the status CHECK constraint on public.booking in supabase/schema.sql
@@ -55,6 +55,11 @@ export interface Game {
   copies: Copy[]
   /** From public.how_to_play_step, in step_number order. */
   howToPlay: string[]
+  /**
+   * board_game.deleted_at is set. The game is gone from the catalog and the employee
+   * game list, but stays loaded so past bookings still show its name.
+   */
+  archived: boolean
 }
 
 /** The editable fields of public.board_game plus its category links and how-to-play steps. */
@@ -151,18 +156,28 @@ function messageForDbError(err: DbError): string {
 
 const NO_CATALOG_PERMISSION = 'ไม่มีสิทธิ์แก้ไขข้อมูลเกม กรุณาเข้าสู่ระบบเจ้าหน้าที่ใหม่'
 const COPY_HAS_HISTORY = 'กล่องนี้มีประวัติการจองแล้ว ลบไม่ได้ ให้เปลี่ยนสภาพเป็น "ชำรุด" หรือ "สูญหาย" แทน เพื่อเลิกให้บริการ'
-const GAME_HAS_HISTORY = 'เกมนี้มีกล่องที่เคยถูกจองแล้ว ลบไม่ได้ เพราะต้องเก็บประวัติการจองไว้ ถ้าจะเลิกให้บริการ ให้เปลี่ยนสภาพทุกกล่องเป็น "ชำรุด" หรือ "สูญหาย" แทน'
-const MIGRATION_NEEDED = 'ฐานข้อมูลยังไม่รองรับไอคอนและวิธีเล่น กรุณารันไฟล์ supabase/migrate_presentation.sql ก่อน'
+const MIGRATION_NEEDED = 'ฐานข้อมูลยังไม่ได้อัปเดต กรุณารันไฟล์ migration ในโฟลเดอร์ supabase/ ให้ครบก่อน'
+
+function gameHasActiveBookingsMessage(count: number) {
+  return `ลบไม่ได้ เพราะยังมีการจองที่ยังไม่จบ ${count} รายการ (จองไว้ กำลังใช้ หรือเกินกำหนด) ลบได้เมื่อการจองเหล่านั้นคืนเกมครบแล้ว`
+}
+
+/** ON DELETE RESTRICT raises 23001; 23503 is the same refusal for NO ACTION foreign keys. */
+function isReferenced(err: DbError) {
+  return err?.code === '23001' || err?.code === '23503'
+}
 
 /** Same idea as messageForDbError, for employees editing games and stock. */
 function messageForCatalogError(err: DbError, whenReferenced = COPY_HAS_HISTORY): string {
   if (!err) return 'บันทึกข้อมูลไม่สำเร็จ'
   const detail = `${err.code ?? ''} ${err.message ?? ''}`
   if (err.code === '42501') return NO_CATALOG_PERMISSION
-  // The schema's FKs are ON DELETE RESTRICT, which raises 23001; 23503 covers NO ACTION.
-  if (err.code === '23001' || err.code === '23503') return whenReferenced
-  if (isMissingTable(err) || (err.code === 'PGRST204' && detail.includes('icon'))) return MIGRATION_NEEDED
+  if (isReferenced(err)) return whenReferenced
+  if (isMissingTable(err) || (err.code === 'PGRST204' && (detail.includes('icon') || detail.includes('deleted_at')))) {
+    return MIGRATION_NEEDED
+  }
   if (detail.includes('chk_board_game_player_range')) return 'จำนวนผู้เล่นสูงสุดต้องไม่น้อยกว่าขั้นต่ำ'
+  if (err.code === '23505' && detail.includes('category_name')) return 'มีหมวดหมู่ชื่อนี้อยู่แล้ว'
   if (err.code === '23505') return 'รหัสเกมหรือรหัสกล่องซ้ำกับที่มีอยู่ กรุณาลองใหม่อีกครั้ง'
   if (err.code === '22001') return 'ข้อมูลยาวเกินกว่าที่ระบบรองรับ'
   return `บันทึกข้อมูลไม่สำเร็จ: ${err.message ?? 'ไม่ทราบสาเหตุ'}`
@@ -181,6 +196,9 @@ function createStore(supabase: SupabaseClient) {
 
   const loading = ref(true)
   const loadError = ref<string | null>(null)
+
+  /** What customers and the employee game list see; archived games are left out. */
+  const catalogGames = computed(() => games.filter(g => !g.archived))
 
   // ---------- loading ----------
 
@@ -251,7 +269,9 @@ function createStore(supabase: SupabaseClient) {
         maxP: row.max_players,
         playtime: row.play_time_mins,
         copies: copiesByGame.get(row.game_id) ?? [],
-        howToPlay: stepsByGame.get(row.game_id) ?? []
+        howToPlay: stepsByGame.get(row.game_id) ?? [],
+        // Undefined until migrate_archive.sql has run, which reads as "not archived".
+        archived: !!row.deleted_at
       })))
 
       users.splice(0, users.length, ...(userRes.data ?? []).map(row => ({
@@ -351,6 +371,16 @@ function createStore(supabase: SupabaseClient) {
 
   function gameHasHistory(gameId: string) {
     return getGame(gameId)?.copies.some(c => copyHasHistory(c.id)) ?? false
+  }
+
+  /** Bookings on this game still Reserved, In_Use or Overdue — what blocks deleting it. */
+  function activeBookingCountForGame(gameId: string) {
+    return getGame(gameId)?.copies.reduce((n, c) => n + activeBookingCount(c.id), 0) ?? 0
+  }
+
+  /** Games customers can still see in this category. */
+  function categoryGameCount(categoryId: string) {
+    return catalogGames.value.filter(g => g.categories.some(c => c.id === categoryId)).length
   }
 
   function activeBookingCount(copyId: string) {
@@ -630,31 +660,81 @@ function createStore(supabase: SupabaseClient) {
   }
 
   /**
-   * Deletes the game and its boxes; category links and how-to-play steps go with it
-   * via ON DELETE CASCADE. Refused if any box was ever booked, because
-   * booking.copy_id is ON DELETE RESTRICT and that history must be kept.
+   * Removes a game from the catalog. Refused while any of its bookings is still
+   * Reserved, In_Use or Overdue.
+   *
+   * A game that was never booked is deleted for real, and its category links and
+   * how-to-play steps go with it via ON DELETE CASCADE. A game with past bookings is
+   * archived instead (board_game.deleted_at): booking.copy_id and game_copy.game_id are
+   * ON DELETE RESTRICT, and deleting those rows would erase the booking history.
    */
-  async function deleteGame(gameId: string): Promise<{ error: string | null }> {
-    if (!getGame(gameId)) return { error: 'ไม่พบเกมนี้' }
-    if (gameHasHistory(gameId)) return { error: GAME_HAS_HISTORY }
+  async function deleteGame(gameId: string): Promise<{ error: string | null, archived: boolean }> {
+    if (!getGame(gameId)) return { error: 'ไม่พบเกมนี้', archived: false }
+    const active = activeBookingCountForGame(gameId)
+    if (active > 0) return { error: gameHasActiveBookingsMessage(active), archived: false }
 
     try {
-      // Delete by game_id rather than the locally known boxes, so a box added from
-      // another device can't block the game delete. If any box has a booking the
-      // database rejects the whole statement and nothing is removed.
-      const { error: copyError } = await supabase.from('game_copy').delete().eq('game_id', gameId)
-      if (copyError) return { error: messageForCatalogError(copyError, GAME_HAS_HISTORY) }
+      if (!gameHasHistory(gameId)) {
+        // Delete by game_id so a box added from another device isn't missed. If a booking
+        // appeared meanwhile, the database rejects the whole statement and removes
+        // nothing — fall through and archive instead.
+        const { error: copyError } = await supabase.from('game_copy').delete().eq('game_id', gameId)
+        if (copyError && !isReferenced(copyError)) {
+          return { error: messageForCatalogError(copyError), archived: false }
+        }
+        if (!copyError) {
+          const { data, error } = await supabase.from('board_game').delete().eq('game_id', gameId).select('game_id')
+          if (error) return { error: messageForCatalogError(error), archived: false }
+          if (!data?.length) return { error: NO_CATALOG_PERMISSION, archived: false }
+          await loadAll()
+          return { error: null, archived: false }
+        }
+      }
 
-      const { data, error } = await supabase.from('board_game').delete().eq('game_id', gameId).select('game_id')
-      if (error) return { error: messageForCatalogError(error, GAME_HAS_HISTORY) }
+      const { data, error } = await supabase
+        .from('board_game')
+        .update({ deleted_at: toDbTimestamp(new Date()) })
+        .eq('game_id', gameId)
+        .select('game_id')
+      if (error) return { error: messageForCatalogError(error), archived: false }
+      if (!data?.length) return { error: NO_CATALOG_PERMISSION, archived: false }
+
+      await loadAll()
+      return { error: null, archived: true }
+    } catch (e: unknown) {
+      await loadAll()
+      return { error: messageForCatalogError(e as DbError), archived: false }
+    }
+  }
+
+  async function createCategory(name: string): Promise<{ error: string | null }> {
+    const clean = name.trim()
+    if (!clean) return { error: 'กรุณากรอกชื่อหมวดหมู่' }
+    if (clean.length > 100) return { error: 'ชื่อหมวดหมู่ยาวได้ไม่เกิน 100 ตัวอักษร' }
+    // category_name is UNIQUE but case-sensitive in the DB; also catch "party" vs "Party".
+    if (categories.some(c => c.name.toLowerCase() === clean.toLowerCase())) return { error: 'มีหมวดหมู่ชื่อนี้อยู่แล้ว' }
+
+    try {
+      const { data, error } = await supabase
+        .from('category')
+        .insert({ category_id: await nextId('category', 'category_id', 'CAT-', 3), category_name: clean })
+        .select('category_id')
+      if (error) return { error: messageForCatalogError(error) }
       if (!data?.length) return { error: NO_CATALOG_PERMISSION }
-
       await loadAll()
       return { error: null }
     } catch (e: unknown) {
-      await loadAll()
-      return { error: messageForCatalogError(e as DbError, GAME_HAS_HISTORY) }
+      return { error: messageForCatalogError(e as DbError) }
     }
+  }
+
+  /** Games are kept; only their link to this category goes (game_category is ON DELETE CASCADE). */
+  async function deleteCategory(categoryId: string): Promise<{ error: string | null }> {
+    const { data, error } = await supabase.from('category').delete().eq('category_id', categoryId).select('category_id')
+    if (error) return { error: messageForCatalogError(error) }
+    if (!data?.length) return { error: NO_CATALOG_PERMISSION }
+    await loadAll()
+    return { error: null }
   }
 
   async function addCopies(gameId: string, count: number): Promise<{ error: string | null }> {
@@ -713,6 +793,7 @@ function createStore(supabase: SupabaseClient) {
 
   return {
     games,
+    catalogGames,
     categories,
     users,
     bookings,
@@ -739,6 +820,10 @@ function createStore(supabase: SupabaseClient) {
     createGame,
     updateGame,
     deleteGame,
+    activeBookingCountForGame,
+    createCategory,
+    deleteCategory,
+    categoryGameCount,
     addCopies,
     setCopyCondition,
     deleteCopy,

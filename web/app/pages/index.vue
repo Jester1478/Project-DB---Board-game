@@ -2,14 +2,14 @@
 import { computed, ref } from 'vue'
 import { useBoardGameStore } from '~/composables/useBoardGameStore'
 
-const { games, categories, loading, loadError } = useBoardGameStore()
+const { catalogGames, categories, loading, loadError } = useBoardGameStore()
 
 const search = ref('')
 const categoryId = ref('')
 
 const filteredGames = computed(() => {
   const q = search.value.trim().toLowerCase()
-  return games.filter(g =>
+  return catalogGames.value.filter(g =>
     g.name.toLowerCase().includes(q)
     && (!categoryId.value || g.categories.some(c => c.id === categoryId.value))
   )

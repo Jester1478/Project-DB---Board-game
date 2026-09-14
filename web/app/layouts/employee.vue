@@ -32,6 +32,7 @@ async function logout() {
     <nav v-if="employee" class="employee-tabs">
       <NuxtLink to="/employee" :class="{ active: route.path === '/employee' }">การจอง</NuxtLink>
       <NuxtLink to="/employee/games" :class="{ active: route.path.startsWith('/employee/games') }">จัดการเกม</NuxtLink>
+      <NuxtLink to="/employee/categories" :class="{ active: route.path.startsWith('/employee/categories') }">หมวดหมู่</NuxtLink>
     </nav>
     <slot />
   </div>
