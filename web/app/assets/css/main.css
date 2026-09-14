@@ -254,6 +254,15 @@ footer{ @apply text-center p-5 text-muted text-[11.5px]; }
 .booking-section-head .dim-text{ @apply basis-full; margin: 0; }
 .count-pill{ @apply text-[11px] font-semibold py-[2px] px-2 rounded-full bg-surface-muted text-muted border border-border; }
 .archived-section{ @apply mt-10; }
+.sub-tabs{ @apply flex gap-1 border-b border-border mb-2 overflow-x-auto; }
+.sub-tabs button{
+  @apply flex items-center gap-2 py-[10px] px-3 bg-transparent border-b-2 border-transparent -mb-px
+    font-heading font-semibold text-[13.5px] text-muted cursor-pointer whitespace-nowrap;
+}
+.sub-tabs button:hover{ @apply text-ink; }
+.sub-tabs button.active{ @apply text-primary-dark border-primary; }
+.sub-tabs button.active .count-pill{ @apply bg-primary-soft text-primary-dark border-transparent; }
+.tab-subtitle{ @apply mb-3; }
 .inline-form{ @apply flex gap-2 items-center flex-wrap; }
 .inline-form input{
   @apply flex-1 min-w-[200px] py-[9px] px-[10px] rounded-[7px] border border-border bg-surface font-sans text-[13.5px] text-ink;
