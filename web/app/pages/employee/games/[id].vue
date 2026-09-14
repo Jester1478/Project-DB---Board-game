@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { MAX_COPIES_PER_ADD, useBoardGameStore } from '~/composables/useBoardGameStore'
+import { DEFAULT_ICON, MAX_COPIES_PER_ADD, useBoardGameStore } from '~/composables/useBoardGameStore'
 import type { GameInput } from '~/composables/useBoardGameStore'
 import { useToasts } from '~/composables/useToasts'
 
@@ -11,15 +11,26 @@ const route = useRoute()
 const gameId = computed(() => String(route.params.id))
 const isNew = computed(() => gameId.value === 'new')
 
-const { categories, loading, getGame, createGame, updateGame } = useBoardGameStore()
+const { categories, loading, getGame, createGame, updateGame, deleteGame, gameHasHistory } = useBoardGameStore()
 const { addToast } = useToasts()
 
 const game = computed(() => (isNew.value ? undefined : getGame(gameId.value)))
 
-const form = ref({ name: '', description: '', minP: 2, maxP: 4, playtime: 30, categoryId: '' })
+const form = ref({
+  name: '',
+  icon: DEFAULT_ICON,
+  description: '',
+  minP: 2,
+  maxP: 4,
+  playtime: 30,
+  categoryIds: [] as string[],
+  // One step per line; the store turns lines into how_to_play_step rows.
+  howToPlay: ''
+})
 const initialCopies = ref(1)
 const errorMessage = ref('')
 const saving = ref(false)
+const deleting = ref(false)
 
 // Fill the form once per game. Stock changes reload the data, and refilling on every
 // reload would wipe edits the employee hasn't saved yet.
@@ -28,27 +39,29 @@ watch(game, g => {
   if (!g || filledFor.value === g.id) return
   form.value = {
     name: g.name,
+    icon: g.icon,
     description: g.description,
     minP: g.minP,
     maxP: g.maxP,
     playtime: g.playtime,
-    categoryId: g.categoryId ?? ''
+    categoryIds: g.categories.map(c => c.id),
+    howToPlay: g.howToPlay.join('\n')
   }
   filledFor.value = g.id
 }, { immediate: true })
 
-watch(() => categories.length, () => {
-  if (isNew.value && !form.value.categoryId && categories[0]) form.value.categoryId = categories[0].id
-}, { immediate: true })
+const canDelete = computed(() => !!game.value && !gameHasHistory(game.value.id))
 
 function toInput(): GameInput {
   return {
     name: form.value.name,
+    icon: form.value.icon,
     description: form.value.description,
     minP: Number(form.value.minP),
     maxP: Number(form.value.maxP),
     playtime: Number(form.value.playtime),
-    categoryId: form.value.categoryId || null
+    categoryIds: form.value.categoryIds,
+    howToPlay: form.value.howToPlay.split('\n')
   }
 }
 
@@ -64,7 +77,7 @@ async function save() {
       errorMessage.value = error ?? 'สร้างเกมไม่สำเร็จ'
       return
     }
-    if (error) addToast(`สร้างเกมแล้ว แต่เพิ่มกล่องไม่สำเร็จ: ${error}`, true)
+    if (error) addToast(`สร้างเกมแล้ว แต่ตั้งค่าบางส่วนไม่สำเร็จ: ${error}`, true)
     else addToast(`เพิ่มเกม "${form.value.name.trim()}" แล้ว`, false)
     await navigateTo(`/employee/games/${id}`)
     return
@@ -79,6 +92,22 @@ async function save() {
   filledFor.value = null
   addToast('บันทึกข้อมูลเกมแล้ว', false)
 }
+
+async function remove() {
+  if (!game.value || deleting.value) return
+  const name = game.value.name
+  if (!confirm(`ลบเกม "${name}" พร้อมกล่องทั้งหมด ${game.value.copies.length} กล่อง?\nลบแล้วกู้คืนไม่ได้`)) return
+
+  deleting.value = true
+  const { error } = await deleteGame(game.value.id)
+  deleting.value = false
+  if (error) {
+    addToast(error, true)
+    return
+  }
+  addToast(`ลบเกม "${name}" แล้ว`, false)
+  await navigateTo('/employee/games')
+}
 </script>
 
 <template>
@@ -90,28 +119,37 @@ async function save() {
     <template v-else>
       <div class="section-head">
         <h2>{{ isNew ? 'เพิ่มเกมใหม่' : `แก้ไข ${game?.name}` }}</h2>
-        <p v-if="game" class="mono">{{ game.id }}</p>
-        <p v-else>เกมใหม่จะแสดงไอคอน 🎲 และยังไม่มีวิธีเล่น จนกว่าจะเพิ่มในไฟล์ gamePresentation.ts</p>
       </div>
 
       <form class="panel form-panel" @submit.prevent="save">
         <div v-if="errorMessage" class="err">{{ errorMessage }}</div>
 
-        <div class="field">
-          <label>ชื่อเกม</label>
-          <input v-model="form.name" type="text" maxlength="150" required>
+        <div class="row-icon-name">
+          <div class="field">
+            <label>ไอคอน</label>
+            <input v-model="form.icon" type="text" class="icon-input" aria-label="ไอคอนอีโมจิ">
+          </div>
+          <div class="field">
+            <label>ชื่อเกม</label>
+            <input v-model="form.name" type="text" maxlength="150" required>
+          </div>
         </div>
+
         <div class="field">
-          <label>หมวดหมู่</label>
-          <select v-model="form.categoryId">
-            <option value="">— ไม่ระบุ —</option>
-            <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
-          </select>
+          <label>หมวดหมู่ <span class="optional">(เลือกได้หลายหมวด)</span></label>
+          <div class="check-list">
+            <label v-for="c in categories" :key="c.id" class="check-item">
+              <input v-model="form.categoryIds" type="checkbox" :value="c.id">
+              {{ c.name }}
+            </label>
+          </div>
         </div>
+
         <div class="field">
           <label>คำอธิบาย <span class="optional">(ไม่บังคับ)</span></label>
           <textarea v-model="form.description" rows="3" />
         </div>
+
         <div class="row3">
           <div class="field">
             <label>ผู้เล่นขั้นต่ำ</label>
@@ -126,6 +164,12 @@ async function save() {
             <input v-model.number="form.playtime" type="number" min="1" step="1" required>
           </div>
         </div>
+
+        <div class="field">
+          <label>วิธีเล่น <span class="optional">(1 บรรทัดต่อ 1 ขั้นตอน)</span></label>
+          <textarea v-model="form.howToPlay" rows="6" />
+        </div>
+
         <div v-if="isNew" class="field">
           <label>จำนวนกล่องเริ่มต้น</label>
           <input v-model.number="initialCopies" type="number" min="0" :max="MAX_COPIES_PER_ADD" step="1">
@@ -137,6 +181,18 @@ async function save() {
       </form>
 
       <StockManager v-if="game" :game-id="game.id" />
+
+      <section v-if="game" class="panel form-panel danger-zone">
+        <h3>ลบเกม</h3>
+        <p v-if="canDelete" class="dim-text">ลบเกมนี้พร้อมกล่อง หมวดหมู่ และวิธีเล่นทั้งหมด ลบแล้วกู้คืนไม่ได้</p>
+        <p v-else class="dim-text">
+          ลบไม่ได้ เพราะมีกล่องที่เคยถูกจองแล้ว ต้องเก็บประวัติการจองไว้
+          ถ้าจะเลิกให้บริการ ให้เปลี่ยนสภาพทุกกล่องเป็น "ชำรุด" หรือ "สูญหาย" แทน
+        </p>
+        <button class="btn btn-danger btn-sm" type="button" :disabled="!canDelete || deleting" @click="remove">
+          {{ deleting ? 'กำลังลบ...' : 'ลบเกมนี้' }}
+        </button>
+      </section>
     </template>
   </main>
 </template>

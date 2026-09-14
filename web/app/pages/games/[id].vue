@@ -30,7 +30,9 @@ function fmtTime(d: Date) {
         <GameImage :src="game.image" :icon="game.icon" :alt="game.name" />
       </div>
       <div class="game-hero-info">
-        <span class="cat">{{ game.category }}</span>
+        <div v-if="game.categories.length" class="cat-list">
+          <span v-for="c in game.categories" :key="c.id" class="cat">{{ c.name }}</span>
+        </div>
         <h2>{{ game.name }}</h2>
         <p class="game-hero-meta">{{ game.minP }}-{{ game.maxP }} ผู้เล่น · ~{{ game.playtime }} นาที/รอบ · {{ copies.length }} กล่อง</p>
         <button v-if="copies.length" class="btn btn-primary btn-lg" @click="showBookingModal = true">จองคิว</button>

@@ -90,9 +90,10 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
 }
 .card-game-icon img{ @apply w-full h-full object-cover; }
 .card-game h3{ @apply text-[16.5px]; margin: 0 0 4px; }
-.card-game .cat{
+.cat-list{ @apply flex flex-wrap gap-1 mb-2; }
+.cat{
   @apply inline-block text-[10.5px] uppercase tracking-[0.06em] bg-primary-soft text-primary-dark
-    py-[2px] px-2 rounded-full mb-2;
+    py-[2px] px-2 rounded-full;
 }
 .card-game .meta{ @apply text-xs text-muted mb-[10px]; }
 .status-pill{ @apply inline-flex items-center gap-[6px] text-[12.5px] font-semibold py-[5px] px-[10px] rounded-full mb-3; }
@@ -243,5 +244,14 @@ footer{ @apply text-center p-5 text-muted text-[11.5px]; }
 .stock-hint{ @apply mt-3; }
 .dim-text{ @apply text-[12.5px] text-muted; margin: 2px 0 0; }
 .cell-right{ text-align: right; }
+.row-icon-name{ @apply grid grid-cols-[88px_1fr] gap-[10px]; }
+.icon-input{ @apply text-center text-xl; }
+.check-list{ @apply flex flex-wrap gap-x-4 gap-y-2 py-1; }
+.check-item{ @apply inline-flex items-center gap-[6px] text-[13.5px] text-ink cursor-pointer; }
+.field .check-item{ @apply font-normal mb-0; }
+.danger-zone{ @apply border-[rgba(229,72,77,0.35)]; }
+.danger-zone .btn{ @apply mt-3; }
+.btn-danger{ @apply bg-overdue text-white; }
+.btn-danger:hover{ @apply brightness-95; }
 table.catalog-table th:nth-child(4), table.catalog-table td:nth-child(4),
 table.stock-table th:nth-child(4), table.stock-table td:nth-child(4){ @apply max-sm:table-cell; }

@@ -1,42 +1,40 @@
-DELETE FROM public.how_to_play_step;
-DELETE FROM public.game_category;
-DELETE FROM public.game_copy;
-DELETE FROM public.board_game;
-DELETE FROM public.category;
+ALTER TABLE public.board_game ADD COLUMN IF NOT EXISTS icon VARCHAR(16) NOT NULL DEFAULT '🎲';
+ALTER TABLE public.board_game ADD COLUMN IF NOT EXISTS image_url TEXT;
 
-INSERT INTO public.category (category_id, category_name) VALUES
-    ('CAT-STRAT', 'Strategy'),
-    ('CAT-PARTY', 'Party'),
-    ('CAT-FAM',   'Family');
+CREATE TABLE IF NOT EXISTS public.how_to_play_step (
+    game_id     VARCHAR(50) NOT NULL,
+    step_number INTEGER NOT NULL CHECK (step_number > 0),
+    step_text   TEXT NOT NULL,
 
-INSERT INTO public.board_game (game_id, game_name, description, min_players, max_players, play_time_mins, icon) VALUES
-    ('GM-EXKIT',   'เหมียวระเบิด',           'เกมการ์ดจั่วเอาตัวรอด ใครจั่วโดนแมวระเบิดแล้วไม่มีการ์ดกู้ระเบิดถือว่าตกรอบ',   2, 5, 15,  '💥'),
-    ('GM-MUFFIN',  'มัฟฟินไทม์',              'เกมการ์ดป่วน ๆ สะสมไอเทมและขัดขาคู่แข่ง ใครทำเงื่อนไขชนะได้ก่อนเป็นผู้ชนะ',      2, 6, 30,  '🧁'),
-    ('GM-DND',     'ดันเจี้ยนแอนดรากอนส์',    'เกมสวมบทบาทผจญภัย มีผู้คุมเกม (DM) เล่าเรื่องและผู้เล่นสร้างตัวละครของตัวเอง',  3, 6, 240, '🐉'),
-    ('GM-WEREWOLF','คืนล่ามนุษย์หมาป่า',     'เกมจับผิดหาตัวมนุษย์หมาป่าที่แฝงตัวในหมู่บ้าน สลับกลางวัน-กลางคืนจนกว่าจะจบ',  5, 12, 30, '🐺'),
-    ('GM-CHEESE',  'ชีสหายไหไหน',             'เกมปาร์ตี้ตามหาชีสที่หายไป ใช้การสังเกตและการเดาเพื่อหาคำตอบก่อนใคร',          2, 6, 20,  '🧀'),
-    ('GM-RICH',    'เกมเศรษฐี',               'เกมกระดานคลาสสิก ทอยเต๋าเดินซื้อที่ดิน เก็บค่าเช่า ใครรวยที่สุดเป็นผู้ชนะ',      2, 6, 90,  '💰');
+    CONSTRAINT pk_how_to_play_step
+        PRIMARY KEY (game_id, step_number),
 
-INSERT INTO public.game_category (game_id, category_id) VALUES
-    ('GM-EXKIT',   'CAT-PARTY'),
-    ('GM-MUFFIN',  'CAT-PARTY'),
-    ('GM-WEREWOLF','CAT-PARTY'),
-    ('GM-DND',     'CAT-STRAT'),
-    ('GM-CHEESE',  'CAT-FAM'),
-    ('GM-RICH',    'CAT-FAM');
+    CONSTRAINT fk_how_to_play_step_game
+        FOREIGN KEY (game_id)
+        REFERENCES public.board_game(game_id)
+        ON DELETE CASCADE
+);
 
-INSERT INTO public.game_copy (copy_id, copy_code, condition_status, copy_number, game_id) VALUES
-    ('CP-EXKIT-01',  'EXKIT-01',  'Good', 1, 'GM-EXKIT'),
-    ('CP-EXKIT-02',  'EXKIT-02',  'Good', 2, 'GM-EXKIT'),
-    ('CP-MUFFIN-01', 'MUFFIN-01', 'Good', 1, 'GM-MUFFIN'),
-    ('CP-DND-01',    'DND-01',    'Good', 1, 'GM-DND'),
-    ('CP-WW-01',     'WW-01',     'Good', 1, 'GM-WEREWOLF'),
-    ('CP-WW-02',     'WW-02',     'Good', 2, 'GM-WEREWOLF'),
-    ('CP-CHEESE-01', 'CHEESE-01', 'Good', 1, 'GM-CHEESE'),
-    ('CP-CHEESE-02', 'CHEESE-02', 'Good', 2, 'GM-CHEESE'),
-    ('CP-RICH-01',   'RICH-01',   'Good', 1, 'GM-RICH');
+ALTER TABLE public.how_to_play_step ENABLE ROW LEVEL SECURITY;
 
-INSERT INTO public.how_to_play_step (game_id, step_number, step_text) VALUES
+DROP POLICY IF EXISTS catalog_read ON public.how_to_play_step;
+DROP POLICY IF EXISTS catalog_write_employee ON public.how_to_play_step;
+
+CREATE POLICY catalog_read ON public.how_to_play_step
+    FOR SELECT USING (true);
+CREATE POLICY catalog_write_employee ON public.how_to_play_step
+    FOR ALL USING (public.is_employee()) WITH CHECK (public.is_employee());
+
+UPDATE public.board_game SET icon = '💥' WHERE game_id = 'GM-EXKIT';
+UPDATE public.board_game SET icon = '🧁' WHERE game_id = 'GM-MUFFIN';
+UPDATE public.board_game SET icon = '🐉' WHERE game_id = 'GM-DND';
+UPDATE public.board_game SET icon = '🐺' WHERE game_id = 'GM-WEREWOLF';
+UPDATE public.board_game SET icon = '🧀' WHERE game_id = 'GM-CHEESE';
+UPDATE public.board_game SET icon = '💰' WHERE game_id = 'GM-RICH';
+
+INSERT INTO public.how_to_play_step (game_id, step_number, step_text)
+SELECT v.game_id, v.step_number, v.step_text
+FROM (VALUES
     ('GM-EXKIT', 1, 'สับการ์ดแมวระเบิดใส่กองจั่วให้น้อยกว่าจำนวนผู้เล่น 1 ใบ และแจกการ์ดกู้ระเบิด (Defuse) ให้ทุกคนคนละ 1 ใบ'),
     ('GM-EXKIT', 2, 'ในแต่ละตา เล่นการ์ดพิเศษกี่ใบก็ได้ (ข้ามตา, โจมตี, ดูอนาคต, สับไพ่) แล้วจบตาด้วยการจั่ว 1 ใบ'),
     ('GM-EXKIT', 3, 'ถ้าจั่วโดนแมวระเบิด ต้องทิ้งการ์ดกู้ระเบิดเพื่อเอาตัวรอด แล้วแอบสอดแมวระเบิดกลับเข้ากองตรงไหนก็ได้'),
@@ -60,4 +58,7 @@ INSERT INTO public.how_to_play_step (game_id, step_number, step_text) VALUES
     ('GM-RICH', 1, 'ผู้เล่นทุกคนเริ่มด้วยเงินทุนเท่ากัน วางหมากที่ช่องเริ่มต้น'),
     ('GM-RICH', 2, 'ผลัดกันทอยลูกเต๋าแล้วเดินหมากตามแต้มที่ได้'),
     ('GM-RICH', 3, 'หากหยุดบนที่ดินว่างสามารถซื้อได้ หากเป็นที่ดินของคนอื่นต้องจ่ายค่าเช่า'),
-    ('GM-RICH', 4, 'สร้างบ้านและโรงแรมเพื่อเพิ่มค่าเช่า ใครทำให้คู่แข่งล้มละลายจนเหลือคนสุดท้ายเป็นผู้ชนะ');
+    ('GM-RICH', 4, 'สร้างบ้านและโรงแรมเพื่อเพิ่มค่าเช่า ใครทำให้คู่แข่งล้มละลายจนเหลือคนสุดท้ายเป็นผู้ชนะ')
+) AS v(game_id, step_number, step_text)
+WHERE EXISTS (SELECT 1 FROM public.board_game g WHERE g.game_id = v.game_id)
+ON CONFLICT (game_id, step_number) DO NOTHING;

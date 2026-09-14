@@ -64,10 +64,7 @@ function onDelete(copy: Copy) {
       </thead>
       <tbody>
         <tr v-for="c in copies" :key="c.id" :class="{ retired: !isUsableCopy(c) }">
-          <td>
-            <span class="mono">{{ c.label }}</span><br>
-            <span class="mono dim">{{ c.id }}</span>
-          </td>
+          <td class="mono">{{ c.label }}</td>
           <td>
             <select class="cond-select" :value="c.condition" :disabled="busy" @change="onCondition(c, $event)">
               <option v-for="k in conditions" :key="k" :value="k">{{ CONDITION_LABELS[k] }}</option>

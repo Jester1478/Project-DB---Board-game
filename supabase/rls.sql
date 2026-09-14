@@ -20,6 +20,7 @@ ALTER TABLE public.board_game    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.game_category ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.game_copy     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.booking       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.how_to_play_step ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS prototype_public_access ON public.users;
 DROP POLICY IF EXISTS prototype_public_access ON public.employee;
@@ -37,6 +38,8 @@ DROP POLICY IF EXISTS catalog_write_employee ON public.category;
 DROP POLICY IF EXISTS catalog_write_employee ON public.board_game;
 DROP POLICY IF EXISTS catalog_write_employee ON public.game_category;
 DROP POLICY IF EXISTS catalog_write_employee ON public.game_copy;
+DROP POLICY IF EXISTS catalog_read ON public.how_to_play_step;
+DROP POLICY IF EXISTS catalog_write_employee ON public.how_to_play_step;
 DROP POLICY IF EXISTS employee_read_self ON public.employee;
 DROP POLICY IF EXISTS users_read ON public.users;
 DROP POLICY IF EXISTS users_insert ON public.users;
@@ -59,6 +62,10 @@ CREATE POLICY catalog_write_employee ON public.board_game
 CREATE POLICY catalog_write_employee ON public.game_category
     FOR ALL USING (public.is_employee()) WITH CHECK (public.is_employee());
 CREATE POLICY catalog_write_employee ON public.game_copy
+    FOR ALL USING (public.is_employee()) WITH CHECK (public.is_employee());
+
+CREATE POLICY catalog_read ON public.how_to_play_step FOR SELECT USING (true);
+CREATE POLICY catalog_write_employee ON public.how_to_play_step
     FOR ALL USING (public.is_employee()) WITH CHECK (public.is_employee());
 
 CREATE POLICY employee_read_self ON public.employee

@@ -11,8 +11,12 @@ const search = ref('')
 
 const rows = computed(() => {
   const q = search.value.trim().toLowerCase()
-  return games.filter(g => `${g.name} ${g.id} ${g.category}`.toLowerCase().includes(q))
+  return games.filter(g => `${g.name} ${categoryNames(g)}`.toLowerCase().includes(q))
 })
+
+function categoryNames(game: Game) {
+  return game.categories.map(c => c.name).join(', ')
+}
 
 function stock(game: Game) {
   const usable = game.copies.filter(isUsableCopy).length
@@ -31,7 +35,7 @@ function stock(game: Game) {
     </div>
 
     <div class="employee-search">
-      <input v-model="search" type="text" placeholder="ค้นหาด้วยชื่อเกม รหัสเกม หรือหมวดหมู่...">
+      <input v-model="search" type="text" placeholder="ค้นหาด้วยชื่อเกม หรือหมวดหมู่...">
     </div>
 
     <p v-if="loadError" class="err">โหลดข้อมูลไม่สำเร็จ: {{ loadError }}</p>
@@ -42,11 +46,8 @@ function stock(game: Game) {
       </thead>
       <tbody>
         <tr v-for="g in rows" :key="g.id">
-          <td>
-            {{ g.icon }} {{ g.name }}<br>
-            <span class="mono dim">{{ g.id }}</span>
-          </td>
-          <td>{{ g.category }}</td>
+          <td>{{ g.icon }} {{ g.name }}</td>
+          <td>{{ categoryNames(g) || '—' }}</td>
           <td>{{ g.minP }}-{{ g.maxP }} คน · {{ g.playtime }} นาที</td>
           <td>
             พร้อมให้บริการ <strong>{{ stock(g).usable }}</strong> กล่อง

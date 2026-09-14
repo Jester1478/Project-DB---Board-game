@@ -2,16 +2,17 @@
 import { computed, ref } from 'vue'
 import { useBoardGameStore } from '~/composables/useBoardGameStore'
 
-const { games, loading, loadError } = useBoardGameStore()
+const { games, categories, loading, loadError } = useBoardGameStore()
 
 const search = ref('')
-const category = ref('')
-
-const categories = computed(() => [...new Set(games.map(g => g.category))])
+const categoryId = ref('')
 
 const filteredGames = computed(() => {
   const q = search.value.trim().toLowerCase()
-  return games.filter(g => g.name.toLowerCase().includes(q) && (!category.value || g.category === category.value))
+  return games.filter(g =>
+    g.name.toLowerCase().includes(q)
+    && (!categoryId.value || g.categories.some(c => c.id === categoryId.value))
+  )
 })
 </script>
 
@@ -23,9 +24,9 @@ const filteredGames = computed(() => {
     </div>
     <div class="filters">
       <input v-model="search" type="text" placeholder="ค้นหาชื่อเกม...">
-      <select v-model="category">
+      <select v-model="categoryId">
         <option value="">ทุกหมวดหมู่</option>
-        <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
+        <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
       </select>
     </div>
     <p v-if="loadError" class="err">โหลดข้อมูลจากฐานข้อมูลไม่สำเร็จ: {{ loadError }}</p>

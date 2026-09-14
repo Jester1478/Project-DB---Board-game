@@ -4,7 +4,7 @@ import { useBoardGameStore } from '~/composables/useBoardGameStore'
 import { useToasts } from '~/composables/useToasts'
 import { useEmployeeAuth } from '~/composables/useEmployeeAuth'
 
-const { games, bookings, getUser, userLabel, markInUse, markReturned } = useBoardGameStore()
+const { games, bookings, getUser, userLabel, copyLabel, markInUse, markReturned } = useBoardGameStore()
 const { addToast } = useToasts()
 const { employee } = useEmployeeAuth()
 
@@ -44,14 +44,14 @@ const NOT_SAVED = 'บันทึกไม่สำเร็จ — สิท�
 async function handleMarkInUse(id: string) {
   if (!employee.value) return addToast(NOT_SAVED, true)
   const b = await markInUse(id, employee.value.id)
-  if (b) addToast(`ส่งมอบ ${gameFor(b.gameId).name} (${b.copyId}) ให้ ${userLabel(b.userId)} แล้ว`, false)
+  if (b) addToast(`ส่งมอบ ${gameFor(b.gameId).name} (${copyLabel(b.copyId)}) ให้ ${userLabel(b.userId)} แล้ว`, false)
   else addToast(NOT_SAVED, true)
 }
 
 async function handleMarkReturned(id: string) {
   if (!employee.value) return addToast(NOT_SAVED, true)
   const b = await markReturned(id, employee.value.id)
-  if (b) addToast(`บันทึกคืนสำเร็จ — กล่อง ${b.copyId} ว่างพร้อมใช้งานทันที`, false)
+  if (b) addToast(`บันทึกคืนสำเร็จ — กล่อง ${copyLabel(b.copyId)} ว่างพร้อมใช้งานทันที`, false)
   else addToast(NOT_SAVED, true)
 }
 </script>
@@ -73,7 +73,7 @@ async function handleMarkReturned(id: string) {
         <tr v-for="b in rows" :key="b.id">
           <td>
             {{ gameFor(b.gameId).icon }} {{ gameFor(b.gameId).name }}<br>
-            <span class="mono dim">{{ b.copyId }}</span>
+            <span class="mono dim">{{ copyLabel(b.copyId) }}</span>
           </td>
           <td>
             {{ userLabel(b.userId) }}<br>

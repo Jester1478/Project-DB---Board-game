@@ -1,6 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 DROP TABLE IF EXISTS public.booking CASCADE;
+DROP TABLE IF EXISTS public.how_to_play_step CASCADE;
 DROP TABLE IF EXISTS public.game_category CASCADE;
 DROP TABLE IF EXISTS public.game_copy CASCADE;
 DROP TABLE IF EXISTS public.board_game CASCADE;
@@ -36,9 +37,25 @@ CREATE TABLE public.board_game (
     min_players    INTEGER NOT NULL CHECK (min_players >= 1),
     max_players    INTEGER NOT NULL,
     play_time_mins INTEGER NOT NULL CHECK (play_time_mins > 0),
+    icon           VARCHAR(16) NOT NULL DEFAULT '🎲',
+    image_url      TEXT,
 
     CONSTRAINT chk_board_game_player_range
         CHECK (max_players >= min_players)
+);
+
+CREATE TABLE public.how_to_play_step (
+    game_id     VARCHAR(50) NOT NULL,
+    step_number INTEGER NOT NULL CHECK (step_number > 0),
+    step_text   TEXT NOT NULL,
+
+    CONSTRAINT pk_how_to_play_step
+        PRIMARY KEY (game_id, step_number),
+
+    CONSTRAINT fk_how_to_play_step_game
+        FOREIGN KEY (game_id)
+        REFERENCES public.board_game(game_id)
+        ON DELETE CASCADE
 );
 
 CREATE TABLE public.game_category (
