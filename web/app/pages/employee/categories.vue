@@ -1,17 +1,21 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 import { useBoardGameStore } from '~/composables/useBoardGameStore'
 import type { Category } from '~/composables/useBoardGameStore'
 import { useToasts } from '~/composables/useToasts'
 
 definePageMeta({ layout: 'employee', middleware: 'employee' })
 
-const { categories, loading, loadError, categoryGameCount, createCategory, deleteCategory } = useBoardGameStore()
+const { categories, loading, loadError, categoryGameCount, createCategory, renameCategory, deleteCategory } = useBoardGameStore()
 const { addToast } = useToasts()
 
 const newName = ref('')
 const errorMessage = ref('')
 const busy = ref(false)
+
+const editingId = ref<string | null>(null)
+const editName = ref('')
+const editInput = ref<HTMLInputElement[]>([])
 
 async function add() {
   if (busy.value) return
@@ -26,6 +30,33 @@ async function add() {
   }
   newName.value = ''
   addToast(`เพิ่มหมวดหมู่ "${name}" แล้ว`, false)
+}
+
+async function startRename(category: Category) {
+  editingId.value = category.id
+  editName.value = category.name
+  errorMessage.value = ''
+  await nextTick()
+  editInput.value[0]?.select()
+}
+
+function cancelRename() {
+  editingId.value = null
+  editName.value = ''
+}
+
+async function saveRename(category: Category) {
+  if (busy.value) return
+  busy.value = true
+  const name = editName.value.trim()
+  const { error } = await renameCategory(category.id, name)
+  busy.value = false
+  if (error) {
+    addToast(error, true)
+    return
+  }
+  if (name !== category.name) addToast(`เปลี่ยนชื่อ "${category.name}" เป็น "${name}" แล้ว`, false)
+  cancelRename()
 }
 
 async function remove(category: Category) {
@@ -47,7 +78,7 @@ async function remove(category: Category) {
   <main>
     <div class="section-head">
       <h2>หมวดหมู่</h2>
-      <p>เพิ่มหรือลบหมวดหมู่เกม เลือกหมวดหมู่ให้แต่ละเกมได้ที่หน้าแก้ไขเกม</p>
+      <p>เพิ่ม เปลี่ยนชื่อ หรือลบหมวดหมู่เกม เลือกหมวดหมู่ให้แต่ละเกมได้ที่หน้าแก้ไขเกม</p>
     </div>
 
     <form class="panel form-panel" @submit.prevent="add">
@@ -66,10 +97,30 @@ async function remove(category: Category) {
       </thead>
       <tbody>
         <tr v-for="c in categories" :key="c.id">
-          <td>{{ c.name }}</td>
+          <td>
+            <input
+              v-if="editingId === c.id"
+              ref="editInput"
+              v-model="editName"
+              class="cell-input"
+              type="text"
+              maxlength="100"
+              aria-label="ชื่อหมวดหมู่"
+              @keyup.enter="saveRename(c)"
+              @keyup.esc="cancelRename"
+            >
+            <template v-else>{{ c.name }}</template>
+          </td>
           <td>{{ categoryGameCount(c.id) }} เกม</td>
           <td class="cell-right">
-            <button class="btn btn-ghost btn-sm" type="button" :disabled="busy" @click="remove(c)">ลบ</button>
+            <div v-if="editingId === c.id" class="cell-actions">
+              <button class="btn btn-primary btn-sm" type="button" :disabled="busy || !editName.trim()" @click="saveRename(c)">บันทึก</button>
+              <button class="btn btn-ghost btn-sm" type="button" :disabled="busy" @click="cancelRename">ยกเลิก</button>
+            </div>
+            <div v-else class="cell-actions">
+              <button class="btn btn-ghost btn-sm" type="button" :disabled="busy || !!editingId" @click="startRename(c)">เปลี่ยนชื่อ</button>
+              <button class="btn btn-ghost btn-sm" type="button" :disabled="busy || !!editingId" @click="remove(c)">ลบ</button>
+            </div>
           </td>
         </tr>
         <tr v-if="!categories.length">

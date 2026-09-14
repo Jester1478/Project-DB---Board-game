@@ -60,6 +60,8 @@ export interface Game {
    * game list, but stays loaded so past bookings still show its name.
    */
   archived: boolean
+  /** When it was archived (board_game.deleted_at); null for games customers can see. */
+  archivedAt: Date | null
 }
 
 /** The editable fields of public.board_game plus its category links and how-to-play steps. */
@@ -200,6 +202,11 @@ function createStore(supabase: SupabaseClient) {
   /** What customers and the employee game list see; archived games are left out. */
   const catalogGames = computed(() => games.filter(g => !g.archived))
 
+  /** Deleted games that were kept for their booking history, most recently deleted first. */
+  const archivedGames = computed(() => games
+    .filter(g => g.archived)
+    .sort((a, b) => +(b.archivedAt ?? 0) - +(a.archivedAt ?? 0)))
+
   // ---------- loading ----------
 
   async function loadAll() {
@@ -271,7 +278,8 @@ function createStore(supabase: SupabaseClient) {
         copies: copiesByGame.get(row.game_id) ?? [],
         howToPlay: stepsByGame.get(row.game_id) ?? [],
         // Undefined until migrate_archive.sql has run, which reads as "not archived".
-        archived: !!row.deleted_at
+        archived: !!row.deleted_at,
+        archivedAt: row.deleted_at ? fromDbTimestamp(row.deleted_at) : null
       })))
 
       users.splice(0, users.length, ...(userRes.data ?? []).map(row => ({
@@ -707,12 +715,46 @@ function createStore(supabase: SupabaseClient) {
     }
   }
 
+  /** Puts an archived game back in the catalog, with its boxes and history as they were. */
+  async function restoreGame(gameId: string): Promise<{ error: string | null }> {
+    const { data, error } = await supabase
+      .from('board_game').update({ deleted_at: null }).eq('game_id', gameId).select('game_id')
+    if (error) return { error: messageForCatalogError(error) }
+    if (!data?.length) return { error: NO_CATALOG_PERMISSION }
+    await loadAll()
+    return { error: null }
+  }
+
+  function validateCategoryName(clean: string, exceptId?: string): string | null {
+    if (!clean) return 'กรุณากรอกชื่อหมวดหมู่'
+    if (clean.length > 100) return 'ชื่อหมวดหมู่ยาวได้ไม่เกิน 100 ตัวอักษร'
+    // category_name is UNIQUE but case-sensitive in the DB; also catch "party" vs "Party".
+    if (categories.some(c => c.id !== exceptId && c.name.toLowerCase() === clean.toLowerCase())) {
+      return 'มีหมวดหมู่ชื่อนี้อยู่แล้ว'
+    }
+    return null
+  }
+
+  async function renameCategory(categoryId: string, name: string): Promise<{ error: string | null }> {
+    const current = categories.find(c => c.id === categoryId)
+    if (!current) return { error: 'ไม่พบหมวดหมู่นี้' }
+    const clean = name.trim()
+    if (clean === current.name) return { error: null }
+    const invalid = validateCategoryName(clean, categoryId)
+    if (invalid) return { error: invalid }
+
+    const { data, error } = await supabase
+      .from('category').update({ category_name: clean }).eq('category_id', categoryId).select('category_id')
+    if (error) return { error: messageForCatalogError(error) }
+    if (!data?.length) return { error: NO_CATALOG_PERMISSION }
+    await loadAll()
+    return { error: null }
+  }
+
   async function createCategory(name: string): Promise<{ error: string | null }> {
     const clean = name.trim()
-    if (!clean) return { error: 'กรุณากรอกชื่อหมวดหมู่' }
-    if (clean.length > 100) return { error: 'ชื่อหมวดหมู่ยาวได้ไม่เกิน 100 ตัวอักษร' }
-    // category_name is UNIQUE but case-sensitive in the DB; also catch "party" vs "Party".
-    if (categories.some(c => c.name.toLowerCase() === clean.toLowerCase())) return { error: 'มีหมวดหมู่ชื่อนี้อยู่แล้ว' }
+    const invalid = validateCategoryName(clean)
+    if (invalid) return { error: invalid }
 
     try {
       const { data, error } = await supabase
@@ -822,7 +864,10 @@ function createStore(supabase: SupabaseClient) {
     deleteGame,
     activeBookingCountForGame,
     createCategory,
+    renameCategory,
     deleteCategory,
+    archivedGames,
+    restoreGame,
     categoryGameCount,
     addCopies,
     setCopyCondition,

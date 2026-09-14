@@ -244,6 +244,16 @@ footer{ @apply text-center p-5 text-muted text-[11.5px]; }
 .stock-hint{ @apply mt-3; }
 .dim-text{ @apply text-[12.5px] text-muted; margin: 2px 0 0; }
 .cell-right{ text-align: right; }
+.cell-actions{ @apply flex gap-2 justify-end flex-wrap; }
+.cell-input{
+  @apply w-full max-w-[320px] py-[6px] px-2 rounded-[7px] border border-border bg-surface text-[13.5px] text-ink;
+}
+.booking-section{ @apply mb-8; }
+.booking-section-head{ @apply flex items-baseline gap-x-2 gap-y-1 flex-wrap mb-2; }
+.booking-section-head h3{ @apply text-base; margin: 0; }
+.booking-section-head .dim-text{ @apply basis-full; margin: 0; }
+.count-pill{ @apply text-[11px] font-semibold py-[2px] px-2 rounded-full bg-surface-muted text-muted border border-border; }
+.archived-section{ @apply mt-10; }
 .inline-form{ @apply flex gap-2 items-center flex-wrap; }
 .inline-form input{
   @apply flex-1 min-w-[200px] py-[9px] px-[10px] rounded-[7px] border border-border bg-surface font-sans text-[13.5px] text-ink;
