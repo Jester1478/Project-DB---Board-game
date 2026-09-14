@@ -6,9 +6,11 @@ import { useBoardGameStore } from '~/composables/useBoardGameStore'
 const route = useRoute()
 const gameId = computed(() => String(route.params.id))
 
-const { getGame, copyStatus, bookingsForCopy, loading } = useBoardGameStore()
+const { getGame, usableCopies, copyStatus, bookingsForCopy, loading } = useBoardGameStore()
 
 const game = computed(() => getGame(gameId.value))
+// Damaged or lost boxes are hidden from customers entirely.
+const copies = computed(() => (game.value ? usableCopies(game.value) : []))
 
 const howToPlayOpen = ref(false)
 const showBookingModal = ref(false)
@@ -30,8 +32,9 @@ function fmtTime(d: Date) {
       <div class="game-hero-info">
         <span class="cat">{{ game.category }}</span>
         <h2>{{ game.name }}</h2>
-        <p class="game-hero-meta">{{ game.minP }}-{{ game.maxP }} ผู้เล่น · ~{{ game.playtime }} นาที/รอบ · {{ game.copies.length }} กล่อง</p>
-        <button class="btn btn-primary btn-lg" @click="showBookingModal = true">จองคิว</button>
+        <p class="game-hero-meta">{{ game.minP }}-{{ game.maxP }} ผู้เล่น · ~{{ game.playtime }} นาที/รอบ · {{ copies.length }} กล่อง</p>
+        <button v-if="copies.length" class="btn btn-primary btn-lg" @click="showBookingModal = true">จองคิว</button>
+        <p v-else class="empty-hint">ขณะนี้ยังไม่มีกล่องให้บริการสำหรับเกมนี้</p>
       </div>
     </section>
 
@@ -42,9 +45,10 @@ function fmtTime(d: Date) {
         <span class="chevron" :class="{ open: howToPlayOpen }">⌄</span>
       </button>
       <div v-if="howToPlayOpen" class="panel-body">
-        <ol class="howto-list">
+        <ol v-if="game.howToPlay.length" class="howto-list">
           <li v-for="(step, i) in game.howToPlay" :key="i">{{ step }}</li>
         </ol>
+        <p v-else class="empty-hint">ยังไม่มีข้อมูลวิธีเล่นสำหรับเกมนี้</p>
       </div>
     </section>
 
@@ -54,7 +58,7 @@ function fmtTime(d: Date) {
         <span>📋 สถานะการจอง</span>
       </div>
       <div class="panel-body">
-        <div v-for="copy in game.copies" :key="copy.id" class="copy-row">
+        <div v-for="copy in copies" :key="copy.id" class="copy-row">
           <div class="copy-row-head">
             <span class="name">{{ copy.label }}</span>
             <span class="state" :class="copyStatus(copy)">{{ copyStatus(copy) === 'free' ? 'ว่าง' : 'ไม่ว่าง' }}</span>
@@ -66,6 +70,7 @@ function fmtTime(d: Date) {
           </div>
           <p v-else class="empty-hint">ยังไม่มีการจองในขณะนี้ — ว่างพร้อมใช้งาน</p>
         </div>
+        <p v-if="!copies.length" class="empty-hint">ยังไม่มีกล่องให้บริการ</p>
       </div>
     </section>
 

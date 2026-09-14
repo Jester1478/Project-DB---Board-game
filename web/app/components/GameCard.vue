@@ -6,11 +6,11 @@ import type { Game } from '~/composables/useBoardGameStore'
 
 const props = defineProps<{ game: Game }>()
 
-const { freeCopyCount } = useBoardGameStore()
+const { freeCopyCount, usableCopies } = useBoardGameStore()
 const router = useRouter()
 
 const free = computed(() => freeCopyCount(props.game))
-const total = computed(() => props.game.copies.length)
+const total = computed(() => usableCopies(props.game).length)
 
 function goToDetail() {
   router.push(`/games/${props.game.id}`)

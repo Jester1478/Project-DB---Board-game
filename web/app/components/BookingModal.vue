@@ -11,7 +11,7 @@ const SLOT_MINUTES = 30
 const props = defineProps<{ gameId: string }>()
 const emit = defineEmits<{ (e: 'close'): void }>()
 
-const { getGame, copyStatus, todayAt, simNow, addBooking } = useBoardGameStore()
+const { getGame, usableCopies, copyStatus, todayAt, simNow, addBooking } = useBoardGameStore()
 const { addToast } = useToasts()
 
 function fmtTime(d: Date) {
@@ -50,9 +50,11 @@ function nextSlotFrom(d: Date) {
 }
 
 const game = getGame(props.gameId)!
-const firstFree = game.copies.find(c => copyStatus(c) === 'free')
+// Only boxes in lendable condition can be booked.
+const copies = usableCopies(game)
+const firstFree = copies.find(c => copyStatus(c) === 'free')
 
-const selectedCopyId = ref(firstFree?.id ?? game.copies[0]?.id ?? '')
+const selectedCopyId = ref(firstFree?.id ?? copies[0]?.id ?? '')
 const firstName = ref('')
 const lastName = ref('')
 const email = ref('')
@@ -114,7 +116,7 @@ async function submit() {
       <div class="field">
         <label>กล่อง</label>
         <select v-model="selectedCopyId">
-          <option v-for="copy in game.copies" :key="copy.id" :value="copy.id">
+          <option v-for="copy in copies" :key="copy.id" :value="copy.id">
             {{ copy.label }} — {{ copyStatus(copy) === 'free' ? 'ว่าง' : 'ไม่ว่าง' }}
           </option>
         </select>

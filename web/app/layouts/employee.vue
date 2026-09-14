@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { useRoute } from 'vue-router'
 import { useEmployeeAuth } from '~/composables/useEmployeeAuth'
 
 const { employee, signOut } = useEmployeeAuth()
+const route = useRoute()
 
 async function logout() {
   await signOut()
@@ -16,7 +18,7 @@ async function logout() {
         <div class="mark">🧑‍💼</div>
         <div class="titles">
           <h1>ระบบเจ้าหน้าที่</h1>
-          <p>จัดการการส่งมอบและรับคืนบอร์ดเกม</p>
+          <p>จัดการการส่งมอบ รับคืน และสต๊อกบอร์ดเกม</p>
         </div>
       </NuxtLink>
       <div v-if="employee" class="header-right">
@@ -27,6 +29,10 @@ async function logout() {
         <button class="btn btn-ghost btn-sm" @click="logout">ออกจากระบบ</button>
       </div>
     </header>
+    <nav v-if="employee" class="employee-tabs">
+      <NuxtLink to="/employee" :class="{ active: route.path === '/employee' }">การจอง</NuxtLink>
+      <NuxtLink to="/employee/games" :class="{ active: route.path.startsWith('/employee/games') }">จัดการเกม</NuxtLink>
+    </nav>
     <slot />
   </div>
 </template>

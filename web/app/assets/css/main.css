@@ -220,3 +220,28 @@ footer{ @apply text-center p-5 text-muted text-[11.5px]; }
 .login-card .sub{ @apply text-[12.5px] text-muted mb-4; }
 .login-card .btn{ @apply mt-3; }
 .btn:disabled{ @apply opacity-60 cursor-not-allowed; }
+
+/* ===== Employee: tabs & game management ===== */
+.employee-tabs{ @apply flex gap-1 px-7 bg-surface border-b border-border max-sm:px-4; }
+.employee-tabs a{
+  @apply py-3 px-3 text-[13.5px] font-heading font-semibold text-muted border-b-2 border-transparent -mb-px;
+}
+.employee-tabs a:hover{ @apply text-ink; }
+.employee-tabs a.active{ @apply text-primary-dark border-primary; }
+.section-head-row{ @apply flex items-end justify-between gap-4 flex-wrap; }
+.form-panel{ @apply p-5 max-sm:p-4; }
+.form-panel h3{ @apply text-base; margin: 0; }
+.field textarea{
+  @apply w-full py-[9px] px-[10px] rounded-[7px] border border-border bg-surface font-sans text-[13.5px] text-ink resize-y;
+}
+.row3{ @apply grid grid-cols-3 gap-[10px] max-sm:grid-cols-1; }
+.stock-head{ @apply flex items-end justify-between gap-3 flex-wrap mb-3; }
+.stock-add{ @apply flex items-center gap-2; }
+.stock-add input{ @apply w-[72px] py-[6px] px-2 rounded-[7px] border border-border bg-surface text-[13px] text-ink; }
+.cond-select{ @apply py-[5px] px-2 rounded-[7px] border border-border bg-surface text-[13px] text-ink; }
+.stock-table tr.retired td{ @apply text-muted bg-surface-muted; }
+.stock-hint{ @apply mt-3; }
+.dim-text{ @apply text-[12.5px] text-muted; margin: 2px 0 0; }
+.cell-right{ text-align: right; }
+table.catalog-table th:nth-child(4), table.catalog-table td:nth-child(4),
+table.stock-table th:nth-child(4), table.stock-table td:nth-child(4){ @apply max-sm:table-cell; }
