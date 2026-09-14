@@ -14,6 +14,13 @@ function fmtTime(d: Date) {
   return d.toTimeString().slice(0, 5)
 }
 
+// e.g. "จ. 15 ก.ย. 2569" — Thai weekday/month with the Buddhist-era year staff read day to day.
+const dateFormat = new Intl.DateTimeFormat('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+
+function fmtDate(d: Date) {
+  return dateFormat.format(d)
+}
+
 const rows = computed(() => {
   const q = search.value.trim().toLowerCase()
   return bookings
@@ -72,7 +79,10 @@ async function handleMarkReturned(id: string) {
             {{ userLabel(b.userId) }}<br>
             <span class="mono dim">{{ getUser(b.userId)?.email }}</span>
           </td>
-          <td class="mono" style="font-size:12px;">{{ fmtTime(b.start) }}–{{ fmtTime(b.end) }}</td>
+          <td>
+            {{ fmtDate(b.start) }}<br>
+            <span class="mono" style="font-size:12px;">{{ fmtTime(b.start) }}–{{ fmtTime(b.end) }}</span>
+          </td>
           <td><span class="badge" :class="b.status">{{ b.status }}</span></td>
           <td>
             <button v-if="b.status === 'Reserved'" class="btn btn-inuse btn-sm" @click="handleMarkInUse(b.id)">ส่งมอบ</button>
