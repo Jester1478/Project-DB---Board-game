@@ -60,8 +60,7 @@ header.top{
   @apply text-[11px] text-overdue bg-overdue-soft border-none rounded-md px-2 py-1 cursor-pointer font-sans;
 }
 .clock-box .tz-reset:hover{ @apply underline; }
-.employee-link{ @apply text-[12.5px] text-muted border-b border-dashed border-border pb-[2px]; }
-.employee-link:hover{ @apply text-primary-dark border-primary; }
+.employee-who{ @apply text-[13px] text-ink text-right leading-tight; }
 
 main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-5 max-sm:px-4 max-sm:pb-[50px]; }
 @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
@@ -211,3 +210,13 @@ table.book-table th:nth-child(4), table.book-table td:nth-child(4){ @apply max-s
 @keyframes slidein{ from{ transform:translateX(30px); opacity:0;} to{ transform:translateX(0); opacity:1;} }
 
 footer{ @apply text-center p-5 text-muted text-[11.5px]; }
+
+/* ===== Employee login ===== */
+.login-page{ @apply flex items-start justify-center pt-16; }
+.login-card{
+  @apply bg-surface text-ink rounded-2xl p-7 max-w-[400px] w-full shadow-card border border-border flex flex-col gap-1;
+}
+.login-card h2{ @apply text-xl; margin: 0 0 2px; }
+.login-card .sub{ @apply text-[12.5px] text-muted mb-4; }
+.login-card .btn{ @apply mt-3; }
+.btn:disabled{ @apply opacity-60 cursor-not-allowed; }

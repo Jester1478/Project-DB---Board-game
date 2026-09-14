@@ -17,10 +17,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="app-shell">
-    <SiteHeader />
+  <NuxtLayout>
     <NuxtPage />
-    <footer>Prototype UI — จำลองข้อมูลในเบราว์เซอร์เท่านั้น ไม่ได้เชื่อมต่อฐานข้อมูลจริง</footer>
-    <ToastStack />
-  </div>
+  </NuxtLayout>
+  <ToastStack />
 </template>

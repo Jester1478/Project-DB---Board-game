@@ -332,21 +332,30 @@ function createStore(supabase: SupabaseClient) {
     }
   }
 
-  async function markInUse(id: string) {
-    const { error } = await supabase.from('booking').update({ status: 'In_Use' }).eq('booking_id', id)
-    if (error) return null
+  /**
+   * RLS lets only a signed-in employee update bookings. A blocked update comes back
+   * with no error and zero rows, so success is judged by the rows returned.
+   */
+  async function markInUse(id: string, employeeId: string) {
+    const { data, error } = await supabase
+      .from('booking')
+      .update({ status: 'In_Use', checkout_by_id: employeeId })
+      .eq('booking_id', id)
+      .select('booking_id')
+    if (error || !data?.length) return null
     const local = bookings.find(b => b.id === id)
     if (local) local.status = 'In_Use'
     return local
   }
 
-  async function markReturned(id: string) {
+  async function markReturned(id: string, employeeId: string) {
     const now = new Date()
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('booking')
-      .update({ status: 'Returned', actual_return_time: toDbTimestamp(now) })
+      .update({ status: 'Returned', actual_return_time: toDbTimestamp(now), return_by_id: employeeId })
       .eq('booking_id', id)
-    if (error) return null
+      .select('booking_id')
+    if (error || !data?.length) return null
     const local = bookings.find(b => b.id === id)
     if (local) {
       local.status = 'Returned'
@@ -355,13 +364,16 @@ function createStore(supabase: SupabaseClient) {
     return local
   }
 
-  /** The F-04 overdue scan: flip In_Use bookings whose end_time has passed. */
+  /**
+   * The F-04 overdue scan: flip In_Use bookings whose end_time has passed.
+   * Always updated on screen; only persisted when an employee is signed in,
+   * since customers' sessions aren't allowed to write bookings.
+   */
   async function recomputeOverdue() {
     const stale = bookings.filter(b => b.status === 'In_Use' && simNow.value > b.end)
     if (!stale.length) return
-    const ids = stale.map(b => b.id)
-    const { error } = await supabase.from('booking').update({ status: 'Overdue' }).in('booking_id', ids)
-    if (!error) stale.forEach(b => { b.status = 'Overdue' })
+    stale.forEach(b => { b.status = 'Overdue' })
+    await supabase.from('booking').update({ status: 'Overdue' }).in('booking_id', stale.map(b => b.id))
   }
 
   // ---------- clock ----------

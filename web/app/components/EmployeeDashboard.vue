@@ -2,9 +2,11 @@
 import { computed, ref } from 'vue'
 import { useBoardGameStore } from '~/composables/useBoardGameStore'
 import { useToasts } from '~/composables/useToasts'
+import { useEmployeeAuth } from '~/composables/useEmployeeAuth'
 
 const { games, bookings, getUser, userLabel, markInUse, markReturned } = useBoardGameStore()
 const { addToast } = useToasts()
+const { employee } = useEmployeeAuth()
 
 const search = ref('')
 
@@ -30,16 +32,20 @@ function gameFor(gameId: string) {
   return games.find(x => x.id === gameId) ?? UNKNOWN_GAME
 }
 
+const NOT_SAVED = 'บันทึกไม่สำเร็จ — สิทธิ์เจ้าหน้าที่อาจหมดอายุ กรุณาเข้าสู่ระบบใหม่'
+
 async function handleMarkInUse(id: string) {
-  const b = await markInUse(id)
+  if (!employee.value) return addToast(NOT_SAVED, true)
+  const b = await markInUse(id, employee.value.id)
   if (b) addToast(`ส่งมอบ ${gameFor(b.gameId).name} (${b.copyId}) ให้ ${userLabel(b.userId)} แล้ว`, false)
-  else addToast('บันทึกไม่สำเร็จ กรุณาลองใหม่', true)
+  else addToast(NOT_SAVED, true)
 }
 
 async function handleMarkReturned(id: string) {
-  const b = await markReturned(id)
+  if (!employee.value) return addToast(NOT_SAVED, true)
+  const b = await markReturned(id, employee.value.id)
   if (b) addToast(`บันทึกคืนสำเร็จ — กล่อง ${b.copyId} ว่างพร้อมใช้งานทันที`, false)
-  else addToast('บันทึกไม่สำเร็จ กรุณาลองใหม่', true)
+  else addToast(NOT_SAVED, true)
 }
 </script>
 

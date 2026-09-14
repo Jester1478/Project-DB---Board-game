@@ -38,7 +38,6 @@ const clockValue = computed({
           จำลองเวลา · กลับไปเวลาจริง
         </button>
       </div>
-      <NuxtLink to="/employee" class="employee-link">สำหรับเจ้าหน้าที่ →</NuxtLink>
     </div>
   </header>
 </template>
