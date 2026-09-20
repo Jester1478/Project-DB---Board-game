@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useBoardGameStore } from '~/composables/useBoardGameStore'
+import { NO_SHOW_GRACE_MINUTES, useBoardGameStore } from '~/composables/useBoardGameStore'
 import type { Booking, BookingStatus } from '~/composables/useBoardGameStore'
 import { useToasts } from '~/composables/useToasts'
 import { useEmployeeAuth } from '~/composables/useEmployeeAuth'
@@ -29,7 +29,13 @@ function fmtDate(d: Date) {
 const SECTIONS: { key: string, title: string, subtitle: string, statuses: BookingStatus[] }[] = [
   { key: 'pending', title: 'กำลังดำเนินการ', subtitle: 'จองแล้ว รอส่งมอบเกมให้ลูกค้า', statuses: ['Reserved'] },
   { key: 'out', title: 'รอคืน', subtitle: 'ส่งมอบแล้ว ลูกค้ากำลังเล่นหรือเกินเวลาคืน', statuses: ['In_Use', 'Overdue'] },
-  { key: 'done', title: 'คืนสำเร็จ', subtitle: 'คืนเกมเรียบร้อยแล้ว', statuses: ['Returned', 'Cancelled'] }
+  { key: 'done', title: 'คืนสำเร็จ', subtitle: 'คืนเกมเรียบร้อยแล้ว', statuses: ['Returned'] },
+  {
+    key: 'cancelled',
+    title: 'ยกเลิก',
+    subtitle: `ลูกค้าไม่มารับภายใน ${NO_SHOW_GRACE_MINUTES} นาทีหลังเวลาเริ่ม ระบบยกเลิกให้อัตโนมัติ`,
+    statuses: ['Cancelled']
+  }
 ]
 
 /**

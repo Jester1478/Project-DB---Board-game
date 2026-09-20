@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useBoardGameStore } from '~/composables/useBoardGameStore'
+import { NO_SHOW_GRACE_MINUTES, useBoardGameStore } from '~/composables/useBoardGameStore'
 import { useToasts } from '~/composables/useToasts'
 
 // Opening hours, in 30-minute slots.
@@ -42,12 +42,24 @@ const allSlots = computed(() => {
   return slots
 })
 
-/** The first slot at or after `now`, so the default start isn't already in the past. */
-function nextSlotFrom(d: Date) {
-  const mins = d.getHours() * 60 + d.getMinutes()
-  const rounded = Math.ceil(mins / SLOT_MINUTES) * SLOT_MINUTES
-  return fromMinutes(Math.min(Math.max(rounded, DAY_START * 60), DAY_END * 60 - SLOT_MINUTES))
-}
+/** The next 30-minute mark from now, never earlier than opening time. */
+const earliestStart = computed(() => {
+  const mins = simNow.value.getHours() * 60 + simNow.value.getMinutes()
+  return Math.max(DAY_START * 60, Math.ceil(mins / SLOT_MINUTES) * SLOT_MINUTES)
+})
+
+/**
+ * Only slots that haven't happened yet — booking in the past is not allowed.
+ * The latest start offered is 30 minutes before closing, so the shortest
+ * booking BR-02 permits still fits inside opening hours.
+ */
+const startSlots = computed(() => allSlots.value.filter(s => {
+  const mins = toMinutes(s)
+  return mins >= earliestStart.value && mins <= DAY_END * 60 - SLOT_MINUTES
+}))
+
+/** Past the last bookable start of the day, there is nothing left to book. */
+const closedForToday = computed(() => startSlots.value.length === 0)
 
 const game = getGame(props.gameId)!
 // Only boxes in lendable condition can be booked.
@@ -59,8 +71,13 @@ const firstName = ref('')
 const lastName = ref('')
 const email = ref('')
 const phone = ref('')
-const startTime = ref(nextSlotFrom(simNow.value))
+const startTime = ref('')
 const errorMessage = ref('')
+
+// The clock advances every 10s; if the chosen start slips into the past, move it on.
+watch(startSlots, slots => {
+  if (!slots.includes(startTime.value)) startTime.value = slots[0] ?? ''
+}, { immediate: true })
 
 /** BR-02: 30 minutes minimum, 4 hours maximum — so only those end slots are offered. */
 const endSlots = computed(() => {
@@ -79,7 +96,7 @@ watch(endSlots, slots => {
 const saving = ref(false)
 
 async function submit() {
-  if (saving.value) return
+  if (saving.value || closedForToday.value) return
   const from = parseTime(startTime.value)
   const to = parseTime(endTime.value)
 
@@ -112,7 +129,13 @@ async function submit() {
     <div class="modal">
       <h3>จองคิวบอร์ดเกม</h3>
       <div class="sub">{{ game.icon }} {{ game.name }}</div>
+      <p class="play-note">
+        เวลาเล่นต่อรอบประมาณ <strong>{{ game.playtime }} นาที</strong> · {{ game.minP }}-{{ game.maxP }} ผู้เล่น
+      </p>
       <div v-if="errorMessage" class="err show">{{ errorMessage }}</div>
+      <div v-if="closedForToday" class="err show">
+        วันนี้เลยเวลารับจองแล้ว (รับจองเริ่มได้ถึง 21:30) กรุณาจองใหม่ในวันถัดไป
+      </div>
       <div class="field">
         <label>กล่อง</label>
         <select v-model="selectedCopyId">
@@ -142,8 +165,8 @@ async function submit() {
       <div class="row2">
         <div class="field">
           <label>เวลาเริ่ม</label>
-          <select v-model="startTime">
-            <option v-for="slot in allSlots" :key="slot" :value="slot">{{ slot }}</option>
+          <select v-model="startTime" :disabled="closedForToday">
+            <option v-for="slot in startSlots" :key="slot" :value="slot">{{ slot }}</option>
           </select>
         </div>
         <div class="field">
@@ -153,10 +176,17 @@ async function submit() {
           </select>
         </div>
       </div>
-      <p class="hint">* เลือกได้ทีละ 30 นาที เปิดให้จอง 08:00–22:00 · ครั้งละ 30 นาที – 4 ชั่วโมง (BR-01–BR-04)</p>
+      <p class="hint">
+        * จองล่วงหน้าเท่านั้น จองย้อนหลังไม่ได้ · เลือกได้ทีละ 30 นาที
+        เปิดให้จอง 08:00–22:00 · ครั้งละ 30 นาที – 4 ชั่วโมง (BR-01–BR-04)
+      </p>
+      <p class="hint hint-warn">
+        กรุณามารับเกมภายใน {{ NO_SHOW_GRACE_MINUTES }} นาทีหลังเวลาเริ่ม
+        หากเลยกำหนด ระบบจะยกเลิกการจองอัตโนมัติและปล่อยกล่องให้คนอื่นจองต่อ
+      </p>
       <div class="modal-actions">
         <button class="btn btn-ghost" :disabled="saving" @click="emit('close')">ยกเลิก</button>
-        <button class="btn btn-primary" :disabled="saving" @click="submit">
+        <button class="btn btn-primary" :disabled="saving || closedForToday" @click="submit">
           {{ saving ? 'กำลังบันทึก...' : 'ยืนยันการจอง' }}
         </button>
       </div>

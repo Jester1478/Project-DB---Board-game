@@ -2,22 +2,19 @@
 import { computed } from 'vue'
 import { useBoardGameStore } from '~/composables/useBoardGameStore'
 
-const { simNow, setSimNow, isTimeOverridden, resetToRealTime } = useBoardGameStore()
+// Read-only: the clock shows the device's real time and can't be changed from the UI.
+const { simNow } = useBoardGameStore()
 
 // e.g. "Asia/Bangkok" — makes it obvious which clock the times on screen belong to.
 const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-function toLocalInputValue(d: Date) {
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
-
-const clockValue = computed({
-  get: () => toLocalInputValue(simNow.value),
-  set: (val: string) => {
-    if (val) setSimNow(new Date(val))
-  }
+// e.g. "ศ. 20 ก.ย. 2569" — Thai weekday and month with the Buddhist-era year.
+const dateFormat = new Intl.DateTimeFormat('th-TH', {
+  weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
 })
+
+const nowDate = computed(() => dateFormat.format(simNow.value))
+const nowTime = computed(() => simNow.value.toTimeString().slice(0, 5))
 </script>
 
 <template>
@@ -31,12 +28,10 @@ const clockValue = computed({
     </NuxtLink>
     <div class="header-right">
       <div class="clock-box">
-        <span class="lbl">เวลา</span>
-        <input v-model="clockValue" type="datetime-local">
-        <span v-if="!isTimeOverridden" class="tz">{{ timeZone }}</span>
-        <button v-else class="tz-reset" title="กลับไปใช้เวลาจริง" @click="resetToRealTime()">
-          จำลองเวลา · กลับไปเวลาจริง
-        </button>
+        <span class="lbl">เวลาปัจจุบัน</span>
+        <span class="clock-date">{{ nowDate }}</span>
+        <span class="clock-time">{{ nowTime }}</span>
+        <span class="tz">{{ timeZone }}</span>
       </div>
     </div>
   </header>

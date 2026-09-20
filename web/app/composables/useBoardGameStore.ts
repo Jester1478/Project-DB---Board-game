@@ -20,6 +20,9 @@ export const MAX_COPIES_PER_ADD = 20
 /** Shown when board_game.icon is empty. Also the column's default in schema.sql. */
 export const DEFAULT_ICON = '🎲'
 
+/** A Reserved booking is held this long past its start time before it counts as a no-show. */
+export const NO_SHOW_GRACE_MINUTES = 10
+
 export interface Copy {
   id: string
   label: string
@@ -190,7 +193,6 @@ let store: ReturnType<typeof createStore> | null = null
 
 function createStore(supabase: SupabaseClient) {
   const simNow = ref(new Date())
-  const isTimeOverridden = ref(false)
 
   const games = reactive<Game[]>([])
   const categories = reactive<Category[]>([])
@@ -419,6 +421,8 @@ function createStore(supabase: SupabaseClient) {
     const digits = normalizePhone(phone)
     if (digits && (digits.length < 9 || digits.length > 10)) return 'เบอร์โทรต้องมี 9-10 หลัก'
     if (isNaN(+start) || isNaN(+end)) return 'กรุณาระบุช่วงเวลาให้ถูกต้อง'
+    // No backdating: a slot that has already started can't be booked.
+    if (start < simNow.value) return 'จองย้อนหลังไม่ได้ กรุณาเลือกเวลาที่ยังมาไม่ถึง'
     if (end <= start) return 'เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่ม'
     const mins = (end.getTime() - start.getTime()) / 60000
     if (mins < 30) return 'ระยะเวลาการจองต้องอย่างน้อย 30 นาที (BR-02)'
@@ -526,15 +530,35 @@ function createStore(supabase: SupabaseClient) {
   }
 
   /**
-   * The F-04 overdue scan: flip In_Use bookings whose end_time has passed.
-   * Always updated on screen; only persisted when an employee is signed in,
-   * since customers' sessions aren't allowed to write bookings.
+   * The F-04 status sweep, run whenever the clock advances:
+   *   Reserved, more than NO_SHOW_GRACE_MINUTES past start -> Cancelled (never collected)
+   *   In_Use, past end_time                                -> Overdue
+   *
+   * Cancelling a no-show matters beyond tidiness: 'Cancelled' is outside the
+   * exc_booking_no_overlap predicate, so the slot and the box are freed for
+   * someone else, and the customer gets their BR-01 quota back.
+   *
+   * Always applied on screen; only persisted when an employee is signed in, since
+   * customers' sessions aren't allowed to write bookings. supabase/migrate_noshow.sql
+   * runs the same two rules in the database so they hold with nobody online.
    */
   async function recomputeOverdue() {
+    const graceMs = NO_SHOW_GRACE_MINUTES * 60_000
+    const noShows = bookings.filter(b => b.status === 'Reserved' && +simNow.value > +b.start + graceMs)
     const stale = bookings.filter(b => b.status === 'In_Use' && simNow.value > b.end)
-    if (!stale.length) return
+    if (!noShows.length && !stale.length) return
+
+    noShows.forEach(b => { b.status = 'Cancelled' })
     stale.forEach(b => { b.status = 'Overdue' })
-    await supabase.from('booking').update({ status: 'Overdue' }).in('booking_id', stale.map(b => b.id))
+
+    await Promise.all([
+      noShows.length
+        ? supabase.from('booking').update({ status: 'Cancelled' }).in('booking_id', noShows.map(b => b.id))
+        : null,
+      stale.length
+        ? supabase.from('booking').update({ status: 'Overdue' }).in('booking_id', stale.map(b => b.id))
+        : null
+    ])
   }
 
   // ---------- catalog writes (employees only; enforced by RLS) ----------
@@ -834,20 +858,8 @@ function createStore(supabase: SupabaseClient) {
 
   // ---------- clock ----------
 
+  /** The clock always follows the device's real time — it can't be overridden. */
   function syncToRealTime() {
-    if (isTimeOverridden.value) return
-    simNow.value = new Date()
-    void recomputeOverdue()
-  }
-
-  function setSimNow(d: Date) {
-    isTimeOverridden.value = true
-    simNow.value = d
-    void recomputeOverdue()
-  }
-
-  function resetToRealTime() {
-    isTimeOverridden.value = false
     simNow.value = new Date()
     void recomputeOverdue()
   }
@@ -866,7 +878,6 @@ function createStore(supabase: SupabaseClient) {
     getUser,
     userLabel,
     simNow,
-    isTimeOverridden,
     todayAt,
     copyStatus,
     getGame,
@@ -895,9 +906,7 @@ function createStore(supabase: SupabaseClient) {
     addCopies,
     setCopyCondition,
     deleteCopy,
-    setSimNow,
     syncToRealTime,
-    resetToRealTime,
     recomputeOverdue
   }
 }

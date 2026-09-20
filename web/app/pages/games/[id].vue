@@ -38,7 +38,20 @@ function fmtTime(d: Date) {
           <span v-for="c in game.categories" :key="c.id" class="cat">{{ c.name }}</span>
         </div>
         <h2>{{ game.name }}</h2>
-        <p class="game-hero-meta">{{ game.minP }}-{{ game.maxP }} ผู้เล่น · ~{{ game.playtime }} นาที/รอบ · {{ copies.length }} กล่อง</p>
+        <ul class="game-facts">
+          <li>
+            <span class="k">ผู้เล่น</span>
+            <span class="v">{{ game.minP }}-{{ game.maxP }} คน</span>
+          </li>
+          <li>
+            <span class="k">เวลาเล่นต่อรอบ</span>
+            <span class="v">~{{ game.playtime }} นาที</span>
+          </li>
+          <li>
+            <span class="k">กล่องให้บริการ</span>
+            <span class="v">{{ copies.length }} กล่อง</span>
+          </li>
+        </ul>
         <button v-if="copies.length" class="btn btn-primary btn-lg" @click="showBookingModal = true">จองคิว</button>
         <p v-else class="empty-hint">ขณะนี้ยังไม่มีกล่องให้บริการสำหรับเกมนี้</p>
       </div>

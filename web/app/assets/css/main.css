@@ -51,15 +51,12 @@ header.top{
 .clock-box{
   @apply bg-surface-muted border border-border rounded-card py-2 px-3 flex items-center gap-[10px] text-[13px];
 }
-.clock-box input[type=datetime-local]{
-  @apply bg-surface text-ink border border-border rounded-[6px] py-[5px] px-2 font-mono text-[12.5px];
-}
 .clock-box .lbl{ @apply text-muted text-[11.5px] uppercase tracking-[0.06em]; }
-.clock-box .tz{ @apply text-muted text-[11px]; }
-.clock-box .tz-reset{
-  @apply text-[11px] text-overdue bg-overdue-soft border-none rounded-md px-2 py-1 cursor-pointer font-sans;
+.clock-box .clock-date{ @apply text-ink text-[13px]; }
+.clock-box .clock-time{
+  @apply bg-surface text-ink border border-border rounded-[6px] py-[4px] px-[9px] font-mono text-[13px];
 }
-.clock-box .tz-reset:hover{ @apply underline; }
+.clock-box .tz{ @apply text-muted text-[11px]; }
 .employee-who{ @apply text-[13px] text-ink text-right leading-tight; }
 
 main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-5 max-sm:px-4 max-sm:pb-[50px]; }
@@ -127,7 +124,6 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
 .game-hero-image img{ @apply w-full h-full object-cover; }
 .game-hero-info{ @apply flex-1 min-w-[200px]; }
 .game-hero-info h2{ @apply text-2xl; margin: 6px 0 4px; }
-.game-hero-meta{ @apply text-muted text-[13.5px]; margin: 0 0 16px; }
 
 .panel{ @apply bg-surface border border-border rounded-card shadow-card mb-4 overflow-hidden; }
 .panel-header{
@@ -174,6 +170,19 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
 .modal-actions{ @apply flex gap-[10px] mt-[18px]; }
 .modal-actions .btn{ @apply flex-1; }
 .hint{ @apply text-[11.5px] text-muted -mt-1; }
+.hint-warn{ @apply text-[#8A6414] bg-reserved-soft rounded-md px-[10px] py-[7px] mt-0; }
+
+/* Play length is the number customers ask about first, so the modal states it plainly. */
+.modal .play-note{
+  @apply text-[12.5px] text-ink bg-surface-muted border border-border rounded-lg px-3 py-2 m-0;
+}
+.modal .play-note strong{ @apply text-primary-dark font-semibold; }
+
+/* Labelled facts on the game page: "เวลาเล่นต่อรอบ" reads clearer than a run-on line. */
+.game-facts{ @apply list-none p-0 m-0 mb-[18px] flex flex-wrap gap-x-8 gap-y-3; }
+.game-facts li{ @apply flex flex-col gap-[2px]; }
+.game-facts .k{ @apply text-[11px] text-muted uppercase tracking-[0.07em]; }
+.game-facts .v{ @apply text-[15px] text-ink font-semibold; }
 .err{ @apply bg-overdue-soft text-[#B91C1C] border border-[rgba(229,72,77,0.3)] py-[9px] px-[11px] rounded-lg text-[12.5px] mb-3; }
 
 /* ===== Employee dashboard ===== */

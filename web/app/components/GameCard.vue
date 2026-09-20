@@ -26,7 +26,7 @@ function goToDetail() {
       <span v-for="c in game.categories" :key="c.id" class="cat">{{ c.name }}</span>
     </div>
     <h3>{{ game.name }}</h3>
-    <div class="meta">{{ game.minP }}-{{ game.maxP }} ผู้เล่น · ~{{ game.playtime }} นาที</div>
+    <div class="meta">{{ game.minP }}-{{ game.maxP }} ผู้เล่น · เล่นรอบละ ~{{ game.playtime }} นาที</div>
     <div class="status-pill" :class="free > 0 ? 'avail' : 'full'">
       <span class="dot" />
       {{ free > 0 ? `เหลือ ${free}/${total} กล่อง` : `ไม่ว่าง (0/${total} กล่อง)` }}
