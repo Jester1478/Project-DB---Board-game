@@ -144,6 +144,9 @@ function isMissingTable(err: DbError) {
 function messageForDbError(err: DbError): string {
   if (!err) return 'บันทึกข้อมูลไม่สำเร็จ'
   const detail = `${err.code ?? ''} ${err.message ?? ''}`
+  // trg_enforce_booking_rules raises BR-01/BR-04/BR-05 already worded for the booker.
+  const ruleViolation = (err.message ?? '').match(/BR-\d+:\s*([^\n]+)/)
+  if (ruleViolation) return ruleViolation[1]!
   if (err.code === '23P01' || detail.includes('exc_booking_no_overlap')) {
     return 'ช่วงเวลานี้ถูกจองไปแล้ว กรุณาเลือกเวลาอื่น (BR-03)'
   }
