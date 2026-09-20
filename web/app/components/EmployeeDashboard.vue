@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { NO_SHOW_GRACE_MINUTES, useBoardGameStore } from '~/composables/useBoardGameStore'
+import { NO_SHOW_GRACE_MINUTES, RETURNED_HISTORY_LIMIT, useBoardGameStore } from '~/composables/useBoardGameStore'
 import type { Booking, BookingStatus } from '~/composables/useBoardGameStore'
 import { useToasts } from '~/composables/useToasts'
 import { useEmployeeAuth } from '~/composables/useEmployeeAuth'
@@ -29,7 +29,12 @@ function fmtDate(d: Date) {
 const SECTIONS: { key: string, title: string, subtitle: string, statuses: BookingStatus[] }[] = [
   { key: 'pending', title: 'กำลังดำเนินการ', subtitle: 'จองแล้ว รอส่งมอบเกมให้ลูกค้า', statuses: ['Reserved'] },
   { key: 'out', title: 'รอคืน', subtitle: 'ส่งมอบแล้ว ลูกค้ากำลังเล่นหรือเกินเวลาคืน', statuses: ['In_Use', 'Overdue'] },
-  { key: 'done', title: 'คืนสำเร็จ', subtitle: 'คืนเกมเรียบร้อยแล้ว', statuses: ['Returned'] },
+  {
+    key: 'done',
+    title: 'คืนสำเร็จ',
+    subtitle: `คืนเกมเรียบร้อยแล้ว — ระบบเก็บไว้ ${RETURNED_HISTORY_LIMIT} รายการล่าสุด รายการเก่ากว่านั้นถูกลบอัตโนมัติ`,
+    statuses: ['Returned']
+  },
   {
     key: 'cancelled',
     title: 'ยกเลิก',
@@ -80,20 +85,21 @@ function isArchived(gameId: string) {
   return games.find(x => x.id === gameId)?.archived ?? false
 }
 
-const NOT_SAVED = 'บันทึกไม่สำเร็จ — สิทธิ์เจ้าหน้าที่อาจหมดอายุ กรุณาเข้าสู่ระบบใหม่'
+const NOT_SIGNED_IN = 'บันทึกไม่สำเร็จ — สิทธิ์เจ้าหน้าที่อาจหมดอายุ กรุณาเข้าสู่ระบบใหม่'
 
 async function handleMarkInUse(id: string) {
-  if (!employee.value) return addToast(NOT_SAVED, true)
-  const b = await markInUse(id, employee.value.id)
-  if (b) addToast(`ส่งมอบ ${gameFor(b.gameId).name} (${copyLabel(b.copyId)}) ให้ ${userLabel(b.userId)} แล้ว`, false)
-  else addToast(NOT_SAVED, true)
+  if (!employee.value) return addToast(NOT_SIGNED_IN, true)
+  // The store reports why it was refused, so a constraint isn't reported as a login problem.
+  const { booking, error } = await markInUse(id, employee.value.id)
+  if (error || !booking) return addToast(error ?? NOT_SIGNED_IN, true)
+  addToast(`ส่งมอบ ${gameFor(booking.gameId).name} (${copyLabel(booking.copyId)}) ให้ ${userLabel(booking.userId)} แล้ว`, false)
 }
 
 async function handleMarkReturned(id: string) {
-  if (!employee.value) return addToast(NOT_SAVED, true)
-  const b = await markReturned(id, employee.value.id)
-  if (b) addToast(`บันทึกคืนสำเร็จ — กล่อง ${copyLabel(b.copyId)} ว่างพร้อมใช้งานทันที`, false)
-  else addToast(NOT_SAVED, true)
+  if (!employee.value) return addToast(NOT_SIGNED_IN, true)
+  const { booking, error } = await markReturned(id, employee.value.id)
+  if (error || !booking) return addToast(error ?? NOT_SIGNED_IN, true)
+  addToast(`บันทึกคืนสำเร็จ — กล่อง ${copyLabel(booking.copyId)} ว่างพร้อมใช้งานทันที`, false)
 }
 </script>
 

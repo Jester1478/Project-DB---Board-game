@@ -23,6 +23,13 @@ export const DEFAULT_ICON = '🎲'
 /** A Reserved booking is held this long past its start time before it counts as a no-show. */
 export const NO_SHOW_GRACE_MINUTES = 10
 
+/**
+ * How many returned bookings are kept. Older ones are deleted hourly by
+ * prune_returned_history() — see supabase/migrate_prune_history.sql. Stated here
+ * only so the dashboard can tell staff the history is capped.
+ */
+export const RETURNED_HISTORY_LIMIT = 200
+
 export interface Copy {
   id: string
   label: string
@@ -112,6 +119,9 @@ export interface BookingInput {
 
 type DbError = { code?: string, message?: string } | null
 
+/** Result of an employee status change: the updated booking, or why it was refused. */
+export type BookingUpdate = { booking: Booking | null, error: string | null }
+
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
 }
@@ -163,6 +173,7 @@ function messageForDbError(err: DbError): string {
 }
 
 const NO_CATALOG_PERMISSION = 'ไม่มีสิทธิ์แก้ไขข้อมูลเกม กรุณาเข้าสู่ระบบเจ้าหน้าที่ใหม่'
+const NO_BOOKING_PERMISSION = 'บันทึกไม่สำเร็จ — สิทธิ์เจ้าหน้าที่อาจหมดอายุ กรุณาเข้าสู่ระบบใหม่'
 const COPY_HAS_HISTORY = 'กล่องนี้มีประวัติการจองแล้ว ลบไม่ได้ ให้เปลี่ยนสภาพเป็น "ชำรุด" หรือ "สูญหาย" แทน เพื่อเลิกให้บริการ'
 const MIGRATION_NEEDED = 'ฐานข้อมูลยังไม่ได้อัปเดต กรุณารันไฟล์ migration ในโฟลเดอร์ supabase/ ให้ครบก่อน'
 
@@ -504,32 +515,36 @@ function createStore(supabase: SupabaseClient) {
    * RLS lets only a signed-in employee update bookings. A blocked update comes back
    * with no error and zero rows, so success is judged by the rows returned.
    */
-  async function markInUse(id: string, employeeId: string) {
+  async function markInUse(id: string, employeeId: string): Promise<BookingUpdate> {
     const { data, error } = await supabase
       .from('booking')
       .update({ status: 'In_Use', checkout_by_id: employeeId })
       .eq('booking_id', id)
       .select('booking_id')
-    if (error || !data?.length) return null
+    // A real refusal (a constraint, say) arrives as an error; RLS instead returns
+    // zero rows and no error, so the two cases need different messages.
+    if (error) return { booking: null, error: messageForDbError(error) }
+    if (!data?.length) return { booking: null, error: NO_BOOKING_PERMISSION }
     const local = bookings.find(b => b.id === id)
     if (local) local.status = 'In_Use'
-    return local
+    return { booking: local ?? null, error: null }
   }
 
-  async function markReturned(id: string, employeeId: string) {
+  async function markReturned(id: string, employeeId: string): Promise<BookingUpdate> {
     const now = new Date()
     const { data, error } = await supabase
       .from('booking')
       .update({ status: 'Returned', actual_return_time: toDbTimestamp(now), return_by_id: employeeId })
       .eq('booking_id', id)
       .select('booking_id')
-    if (error || !data?.length) return null
+    if (error) return { booking: null, error: messageForDbError(error) }
+    if (!data?.length) return { booking: null, error: NO_BOOKING_PERMISSION }
     const local = bookings.find(b => b.id === id)
     if (local) {
       local.status = 'Returned'
       local.actualReturn = now
     }
-    return local
+    return { booking: local ?? null, error: null }
   }
 
   /**

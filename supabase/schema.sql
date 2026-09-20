@@ -123,10 +123,10 @@ CREATE TABLE public.booking (
             AND INTERVAL '4 hours'
         ),
 
-    CONSTRAINT chk_booking_return_time
+    CONSTRAINT chk_booking_returned_has_time
         CHECK (
-            actual_return_time IS NULL
-            OR actual_return_time >= start_time
+            status <> 'Returned'
+            OR actual_return_time IS NOT NULL
         ),
 
     CONSTRAINT exc_booking_no_overlap
