@@ -42,6 +42,7 @@ DROP POLICY IF EXISTS catalog_read ON public.how_to_play_step;
 DROP POLICY IF EXISTS catalog_write_employee ON public.how_to_play_step;
 DROP POLICY IF EXISTS employee_read_self ON public.employee;
 DROP POLICY IF EXISTS users_read ON public.users;
+DROP POLICY IF EXISTS users_read_employee ON public.users;
 DROP POLICY IF EXISTS users_insert ON public.users;
 DROP POLICY IF EXISTS users_update_employee ON public.users;
 DROP POLICY IF EXISTS users_delete_unbooked ON public.users;
@@ -71,10 +72,8 @@ CREATE POLICY catalog_write_employee ON public.how_to_play_step
 CREATE POLICY employee_read_self ON public.employee
     FOR SELECT USING (lower(email) = lower(auth.jwt() ->> 'email'));
 
-CREATE POLICY users_read ON public.users
-    FOR SELECT USING (true);
-CREATE POLICY users_insert ON public.users
-    FOR INSERT WITH CHECK (true);
+CREATE POLICY users_read_employee ON public.users
+    FOR SELECT USING (public.is_employee());
 CREATE POLICY users_update_employee ON public.users
     FOR UPDATE USING (public.is_employee()) WITH CHECK (public.is_employee());
 CREATE POLICY users_delete_unbooked ON public.users

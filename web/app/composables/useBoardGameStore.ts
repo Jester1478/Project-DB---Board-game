@@ -442,7 +442,9 @@ function createStore(supabase: SupabaseClient) {
     if (mins < 30) return 'ระยะเวลาการจองต้องอย่างน้อย 30 นาที (BR-02)'
     if (mins > 240) return 'ระยะเวลาการจองต้องไม่เกิน 4 ชั่วโมง (BR-02)'
 
-    // BR-01/BR-04 are per person; an unseen email is a new user with no history.
+    // A fast path only: `users` is readable by employees, so a customer's own
+    // session sees an empty list and falls through. trg_enforce_booking_rules
+    // applies BR-01 and BR-04 in the database either way.
     const existing = users.find(u => u.email === normalizeEmail(email))
     if (existing) {
       if (hasOverdue(existing.id)) return 'คุณมีรายการค้างสถานะ Overdue โปรดคืนเกมก่อนจองใหม่ (BR-04)'
@@ -459,27 +461,22 @@ function createStore(supabase: SupabaseClient) {
    * so a failed attempt doesn't leave an orphan user behind.
    */
   async function findOrCreateUser(input: BookingInput): Promise<{ id: string, wasCreated: boolean }> {
-    const email = normalizeEmail(input.email)
+    // Customers can't read or insert public.users — it holds other people's names,
+    // emails and phone numbers. This SECURITY DEFINER function does the lookup for
+    // them and hands back only their own id. See supabase/migrate_users_privacy.sql.
+    const { data, error } = await supabase.rpc('find_or_create_user', {
+      p_email: normalizeEmail(input.email),
+      p_first: input.firstName.trim(),
+      p_last: input.lastName.trim(),
+      p_phone: normalizePhone(input.phone) || null
+    })
+    if (error) throw error
 
-    const { data: found, error: findError } = await supabase
-      .from('users').select('user_id').eq('email', email).maybeSingle()
-    if (findError) throw findError
-    if (found) return { id: found.user_id, wasCreated: false }
+    const row = (Array.isArray(data) ? data[0] : data) as
+      { out_user_id: string, out_was_created: boolean } | undefined
+    if (!row?.out_user_id) throw new Error('บันทึกข้อมูลผู้จองไม่สำเร็จ กรุณาลองใหม่อีกครั้ง')
 
-    const { data: created, error: insertError } = await supabase
-      .from('users')
-      .insert({
-        user_id: await nextId('users', 'user_id', 'U', 3),
-        first_name: input.firstName.trim(),
-        last_name: input.lastName.trim(),
-        email,
-        phone: normalizePhone(input.phone) || null
-      })
-      .select('user_id')
-      .single()
-    if (insertError) throw insertError
-
-    return { id: created.user_id, wasCreated: true }
+    return { id: row.out_user_id, wasCreated: row.out_was_created }
   }
 
   async function addBooking(input: BookingInput): Promise<{ error: string | null }> {

@@ -25,6 +25,18 @@ function fmtDate(d: Date) {
   return dateFormat.format(d)
 }
 
+/**
+ * Phone numbers are stored as bare digits (normalizePhone strips the rest), so
+ * group them for reading: 10 digits as 08X-XXX-XXXX, 9-digit landlines as 0X-XXX-XXXX.
+ * The field is optional, so an empty one still shows a dash rather than nothing.
+ */
+function fmtPhone(phone: string | undefined) {
+  const digits = (phone ?? '').replace(/[^0-9]/g, '')
+  if (digits.length === 10) return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`
+  if (digits.length === 9) return `${digits.slice(0, 2)}-${digits.slice(2, 5)}-${digits.slice(5)}`
+  return digits || '—'
+}
+
 /** The three stages a booking moves through, in working order. Each is one tab. */
 const SECTIONS: { key: string, title: string, subtitle: string, statuses: BookingStatus[] }[] = [
   { key: 'pending', title: 'กำลังดำเนินการ', subtitle: 'จองแล้ว รอส่งมอบเกมให้ลูกค้า', statuses: ['Reserved'] },
@@ -142,7 +154,8 @@ async function handleMarkReturned(id: string) {
           </td>
           <td>
             {{ userLabel(b.userId) }}<br>
-            <span class="mono dim">{{ getUser(b.userId)?.email }}</span>
+            <span class="mono dim">{{ getUser(b.userId)?.email }}</span><br>
+            <span class="mono dim">โทร {{ fmtPhone(getUser(b.userId)?.phone) }}</span>
           </td>
           <td>
             {{ fmtDate(b.start) }}<br>
