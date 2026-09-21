@@ -26,6 +26,19 @@ function fmtDate(d: Date) {
 }
 
 /**
+ * Show the name and phone recorded when the booking was made, not the customer's
+ * current details — editing a name must not rewrite who booked last month. Falls
+ * back to the users row for bookings made before migrate_booker_snapshot.sql ran.
+ * The email is not snapshotted: it is the identity, so it never changes.
+ */
+function bookerName(b: Booking) {
+  return b.bookerName || userLabel(b.userId)
+}
+function bookerPhone(b: Booking) {
+  return b.bookerPhone || getUser(b.userId)?.phone
+}
+
+/**
  * Phone numbers are stored as bare digits (normalizePhone strips the rest), so
  * group them for reading: 10 digits as 08X-XXX-XXXX, 9-digit landlines as 0X-XXX-XXXX.
  * The field is optional, so an empty one still shows a dash rather than nothing.
@@ -69,7 +82,8 @@ const sections = computed(() => {
   const matching = bookings
     .filter(b => {
       const u = getUser(b.userId)
-      const hay = `${u?.email ?? ''} ${u?.phone ?? ''} ${userLabel(b.userId)} ${gameFor(b.gameId).name}`.toLowerCase()
+      // Search both what was recorded then and what the customer goes by now.
+      const hay = `${u?.email ?? ''} ${u?.phone ?? ''} ${userLabel(b.userId)} ${b.bookerName} ${b.bookerPhone} ${gameFor(b.gameId).name}`.toLowerCase()
       return hay.includes(q)
     })
     .sort(newestFirst)
@@ -104,7 +118,7 @@ async function handleMarkInUse(id: string) {
   // The store reports why it was refused, so a constraint isn't reported as a login problem.
   const { booking, error } = await markInUse(id, employee.value.id)
   if (error || !booking) return addToast(error ?? NOT_SIGNED_IN, true)
-  addToast(`ส่งมอบ ${gameFor(booking.gameId).name} (${copyLabel(booking.copyId)}) ให้ ${userLabel(booking.userId)} แล้ว`, false)
+  addToast(`ส่งมอบ ${gameFor(booking.gameId).name} (${copyLabel(booking.copyId)}) ให้ ${bookerName(booking)} แล้ว`, false)
 }
 
 async function handleMarkReturned(id: string) {
@@ -153,9 +167,9 @@ async function handleMarkReturned(id: string) {
             <span class="mono dim">{{ copyLabel(b.copyId) }}</span>
           </td>
           <td>
-            {{ userLabel(b.userId) }}<br>
+            {{ bookerName(b) }}<br>
             <span class="mono dim">{{ getUser(b.userId)?.email }}</span><br>
-            <span class="mono dim">โทร {{ fmtPhone(getUser(b.userId)?.phone) }}</span>
+            <span class="mono dim">โทร {{ fmtPhone(bookerPhone(b)) }}</span>
           </td>
           <td>
             {{ fmtDate(b.start) }}<br>

@@ -104,6 +104,14 @@ export interface Booking {
   end: Date
   status: BookingStatus
   actualReturn: Date | null
+  /**
+   * The booker's name and phone as they stood when this booking was made, copied in
+   * by trg_snapshot_booker. public.users holds only their current details, so editing
+   * a name would otherwise rewrite it across every past booking. Empty until
+   * migrate_booker_snapshot.sql has run; callers fall back to the users row.
+   */
+  bookerName: string
+  bookerPhone: string
 }
 
 export interface BookingInput {
@@ -322,7 +330,9 @@ function createStore(supabase: SupabaseClient) {
         start: fromDbTimestamp(row.start_time),
         end: fromDbTimestamp(row.end_time),
         status: row.status as BookingStatus,
-        actualReturn: row.actual_return_time ? fromDbTimestamp(row.actual_return_time) : null
+        actualReturn: row.actual_return_time ? fromDbTimestamp(row.actual_return_time) : null,
+        bookerName: row.booker_name ?? '',
+        bookerPhone: row.booker_phone ?? ''
       })))
 
       await recomputeOverdue()

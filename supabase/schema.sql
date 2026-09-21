@@ -116,6 +116,9 @@ CREATE TABLE public.booking (
     checkout_by_id VARCHAR(20),
     return_by_id   VARCHAR(20),
 
+    booker_name    VARCHAR(201),
+    booker_phone   VARCHAR(10),
+
     CONSTRAINT chk_booking_duration
         CHECK (
             end_time - start_time
