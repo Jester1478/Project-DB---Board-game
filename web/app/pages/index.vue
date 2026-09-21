@@ -29,7 +29,7 @@ const filteredGames = computed(() => {
         <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
       </select>
     </div>
-    <p v-if="loadError" class="err">โหลดข้อมูลจากฐานข้อมูลไม่สำเร็จ: {{ loadError }}</p>
+    <p v-if="loadError" class="err">{{ loadError }}</p>
     <p v-else-if="loading" class="empty-row">กำลังโหลดข้อมูลเกม...</p>
     <div v-else class="grid">
       <GameCard v-for="g in filteredGames" :key="g.id" :game="g" />

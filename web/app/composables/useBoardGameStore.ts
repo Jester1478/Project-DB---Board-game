@@ -169,7 +169,13 @@ function messageForDbError(err: DbError): string {
   if (err.code === '23505' && detail.includes('email')) {
     return 'อีเมลนี้ถูกใช้กับชื่ออื่นแล้ว กรุณาตรวจสอบอีกครั้ง'
   }
-  return `บันทึกข้อมูลไม่สำเร็จ: ${err.message ?? 'ไม่ทราบสาเหตุ'}`
+  // Usually a stale browser tab still running code from before an RLS change.
+  if (err.code === '42501') {
+    return 'หน้าเว็บนี้เป็นเวอร์ชันเก่า กรุณากด Ctrl+Shift+R เพื่อโหลดใหม่ แล้วลองจองอีกครั้ง'
+  }
+  // Never show a raw Postgres message to a customer; keep it in the console instead.
+  console.error('[booking] unexpected database error', err)
+  return `บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง${err.code ? ` (รหัส ${err.code})` : ''}`
 }
 
 const NO_CATALOG_PERMISSION = 'ไม่มีสิทธิ์แก้ไขข้อมูลเกม กรุณาเข้าสู่ระบบเจ้าหน้าที่ใหม่'
@@ -200,7 +206,8 @@ function messageForCatalogError(err: DbError, whenReferenced = COPY_HAS_HISTORY)
   if (err.code === '23505' && detail.includes('pk_game_category')) return 'เกมนี้อยู่ในหมวดหมู่นี้แล้ว'
   if (err.code === '23505') return 'รหัสเกมหรือรหัสกล่องซ้ำกับที่มีอยู่ กรุณาลองใหม่อีกครั้ง'
   if (err.code === '22001') return 'ข้อมูลยาวเกินกว่าที่ระบบรองรับ'
-  return `บันทึกข้อมูลไม่สำเร็จ: ${err.message ?? 'ไม่ทราบสาเหตุ'}`
+  console.error('[catalog] unexpected database error', err)
+  return `บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง${err.code ? ` (รหัส ${err.code})` : ''}`
 }
 
 let store: ReturnType<typeof createStore> | null = null
@@ -320,8 +327,8 @@ function createStore(supabase: SupabaseClient) {
 
       await recomputeOverdue()
     } catch (e: unknown) {
-      const err = e as { message?: string }
-      loadError.value = err.message ?? 'โหลดข้อมูลจากฐานข้อมูลไม่สำเร็จ'
+      console.error('[store] loadAll failed', e)
+      loadError.value = 'โหลดข้อมูลจากฐานข้อมูลไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อแล้วรีเฟรชหน้าเว็บ'
     } finally {
       loading.value = false
     }

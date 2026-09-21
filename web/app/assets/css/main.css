@@ -154,9 +154,15 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
 .overlay{
   @apply fixed inset-0 bg-[rgba(30,26,20,0.45)] backdrop-blur-[2px] flex items-center justify-center z-50 p-4;
 }
+/*
+ * The form is taller than a laptop viewport, so the modal scrolls inside itself —
+ * without the height cap the confirm button sits below the fold with no way to reach it.
+ * dvh (not vh) so mobile browser chrome doesn't hide the last field.
+ */
 .modal{
   @apply bg-surface text-ink rounded-2xl p-6 max-w-[420px] w-full
-    shadow-[0_20px_50px_rgba(30,26,20,0.25)] border border-border;
+    shadow-[0_20px_50px_rgba(30,26,20,0.25)] border border-border
+    max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain;
 }
 .modal h3{ @apply text-lg; margin: 0 0 4px; }
 .modal .sub{ @apply text-[12.5px] text-muted mb-4; }

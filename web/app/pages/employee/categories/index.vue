@@ -89,7 +89,7 @@ async function remove(category: Category) {
       </div>
     </form>
 
-    <p v-if="loadError" class="err">โหลดข้อมูลไม่สำเร็จ: {{ loadError }}</p>
+    <p v-if="loadError" class="err">{{ loadError }}</p>
 
     <table class="book-table">
       <thead>

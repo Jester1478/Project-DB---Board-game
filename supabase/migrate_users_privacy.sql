@@ -50,6 +50,15 @@ GRANT  EXECUTE ON FUNCTION public.find_or_create_user(text, text, text, text) TO
 DROP POLICY IF EXISTS users_read ON public.users;
 DROP POLICY IF EXISTS users_read_employee ON public.users;
 DROP POLICY IF EXISTS users_insert ON public.users;
+DROP POLICY IF EXISTS users_delete_unbooked ON public.users;
 
 CREATE POLICY users_read_employee ON public.users
     FOR SELECT USING (public.is_employee());
+
+CREATE POLICY users_delete_unbooked ON public.users
+    FOR DELETE USING (
+        public.is_employee()
+        OR NOT EXISTS (
+            SELECT 1 FROM public.booking b WHERE b.user_id = users.user_id
+        )
+    );

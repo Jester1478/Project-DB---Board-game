@@ -60,7 +60,7 @@ async function remove(game: Game) {
   <main>
     <NuxtLink to="/employee/categories" class="back-link">← กลับไปหน้าหมวดหมู่</NuxtLink>
 
-    <p v-if="loadError" class="err">โหลดข้อมูลไม่สำเร็จ: {{ loadError }}</p>
+    <p v-if="loadError" class="err">{{ loadError }}</p>
     <p v-if="!category" class="empty-row">{{ loading ? 'กำลังโหลด...' : 'ไม่พบหมวดหมู่นี้' }}</p>
 
     <template v-else>

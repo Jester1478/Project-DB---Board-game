@@ -55,7 +55,10 @@ export function useEmployeeAuth() {
     if (error) {
       if (error.code === 'invalid_credentials') return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
       if (error.code === 'email_not_confirmed') return 'บัญชีนี้ยังไม่ได้ยืนยันอีเมล กรุณาติดต่อผู้ดูแลระบบ'
-      return `เข้าสู่ระบบไม่สำเร็จ: ${error.message}`
+      if (error.code === 'over_request_rate_limit') return 'ลองเข้าสู่ระบบถี่เกินไป กรุณารอสักครู่แล้วลองใหม่'
+      // The raw message is English; keep it in the console rather than on screen.
+      console.error('[auth] sign-in failed', error)
+      return 'เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบอีเมลและรหัสผ่าน แล้วลองใหม่อีกครั้ง'
     }
 
     await refresh()

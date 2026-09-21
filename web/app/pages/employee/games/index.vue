@@ -53,7 +53,7 @@ function stock(game: Game) {
       <input v-model="search" type="text" placeholder="ค้นหาด้วยชื่อเกม หรือหมวดหมู่...">
     </div>
 
-    <p v-if="loadError" class="err">โหลดข้อมูลไม่สำเร็จ: {{ loadError }}</p>
+    <p v-if="loadError" class="err">{{ loadError }}</p>
 
     <table class="book-table catalog-table">
       <thead>
