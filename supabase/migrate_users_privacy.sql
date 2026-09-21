@@ -19,11 +19,21 @@ BEGIN
         RAISE EXCEPTION 'BR-06: กรุณากรอกอีเมล';
     END IF;
 
+    IF v_phone IS NOT NULL AND length(v_phone) NOT BETWEEN 9 AND 10 THEN
+        RAISE EXCEPTION 'BR-07: เบอร์โทรต้องมี 9-10 หลัก';
+    END IF;
+
     SELECT u.user_id INTO v_id
     FROM   public.users u
     WHERE  lower(u.email) = v_email;
 
     IF v_id IS NOT NULL THEN
+        UPDATE public.users u
+        SET    first_name = coalesce(nullif(btrim(coalesce(p_first, '')), ''), u.first_name),
+               last_name  = coalesce(nullif(btrim(coalesce(p_last, '')), ''), u.last_name),
+               phone      = coalesce(v_phone, u.phone)
+        WHERE  u.user_id = v_id;
+
         RETURN QUERY SELECT v_id, false;
         RETURN;
     END IF;
