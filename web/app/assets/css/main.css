@@ -226,6 +226,10 @@ table.book-table th:nth-child(4), table.book-table td:nth-child(4){ @apply max-s
 @keyframes slidein{ from{ transform:translateX(30px); opacity:0;} to{ transform:translateX(0); opacity:1;} }
 
 footer{ @apply text-center p-5 text-muted text-[11.5px]; }
+/* Quiet enough that customers skim past it, findable when staff need it. */
+footer .sep{ @apply mx-[6px] opacity-50; }
+footer .staff-link{ @apply text-muted underline underline-offset-2 decoration-border; }
+footer .staff-link:hover, footer .staff-link:focus-visible{ @apply text-primary-dark decoration-primary; }
 
 /* ===== Employee login ===== */
 .login-page{ @apply flex items-start justify-center pt-16; }
