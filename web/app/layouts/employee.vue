@@ -24,7 +24,7 @@ async function logout() {
       </NuxtLink>
       <div class="header-right">
         <!-- Outside the v-if so the login page has a way back too. -->
-        <NuxtLink to="/" class="site-link">← กลับหน้าลูกค้า</NuxtLink>
+        <NuxtLink to="/" class="site-link">หน้าลูกค้า</NuxtLink>
         <template v-if="employee">
           <span class="employee-who">
             {{ employee.firstName }} {{ employee.lastName }}<br>
