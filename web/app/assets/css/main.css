@@ -58,6 +58,8 @@ header.top{
 }
 .clock-box .tz{ @apply text-muted text-[11px]; }
 .employee-who{ @apply text-[13px] text-ink text-right leading-tight; }
+.site-link{ @apply text-[13px] text-muted underline underline-offset-2 decoration-border; }
+.site-link:hover, .site-link:focus-visible{ @apply text-primary-dark decoration-primary; }
 
 main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-5 max-sm:px-4 max-sm:pb-[50px]; }
 @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }

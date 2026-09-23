@@ -13,7 +13,9 @@ const busy = ref(false)
 
 onMounted(async () => {
   await ensureLoaded()
-  if (employee.value) await navigateTo('/employee')
+  // replace, not push: otherwise Back from the dashboard lands here and is
+  // bounced straight forward again, which reads as a broken Back button.
+  if (employee.value) await navigateTo('/employee', { replace: true })
 })
 
 async function submit() {
@@ -27,7 +29,8 @@ async function submit() {
     errorMessage.value = error
     return
   }
-  await navigateTo('/employee')
+  // Drops the login page from history, so Back returns to wherever they came from.
+  await navigateTo('/employee', { replace: true })
 }
 </script>
 

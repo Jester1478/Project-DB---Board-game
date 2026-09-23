@@ -7,7 +7,8 @@ const route = useRoute()
 
 async function logout() {
   await signOut()
-  await navigateTo('/employee/login')
+  // replace, so Back can't land on the dashboard after signing out.
+  await navigateTo('/employee/login', { replace: true })
 }
 </script>
 
@@ -21,12 +22,16 @@ async function logout() {
           <p>จัดการการส่งมอบ รับคืน และสต๊อกบอร์ดเกม</p>
         </div>
       </NuxtLink>
-      <div v-if="employee" class="header-right">
-        <span class="employee-who">
-          {{ employee.firstName }} {{ employee.lastName }}<br>
-          <span class="mono dim">{{ employee.email }}</span>
-        </span>
-        <button class="btn btn-ghost btn-sm" @click="logout">ออกจากระบบ</button>
+      <div class="header-right">
+        <!-- Outside the v-if so the login page has a way back too. -->
+        <NuxtLink to="/" class="site-link">← กลับหน้าลูกค้า</NuxtLink>
+        <template v-if="employee">
+          <span class="employee-who">
+            {{ employee.firstName }} {{ employee.lastName }}<br>
+            <span class="mono dim">{{ employee.email }}</span>
+          </span>
+          <button class="btn btn-ghost btn-sm" @click="logout">ออกจากระบบ</button>
+        </template>
       </div>
     </header>
     <nav v-if="employee" class="employee-tabs">
