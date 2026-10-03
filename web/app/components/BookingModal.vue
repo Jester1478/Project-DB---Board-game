@@ -128,7 +128,7 @@ async function submit() {
   <div class="overlay show">
     <div class="modal">
       <h3>จองคิวบอร์ดเกม</h3>
-      <div class="sub">{{ game.icon }} {{ game.name }}</div>
+      <div class="sub">{{ game.name }}</div>
       <p class="play-note">
         เวลาเล่นต่อรอบประมาณ <strong>{{ game.playtime }} นาที</strong> · {{ game.minP }}-{{ game.maxP }} ผู้เล่น
       </p>

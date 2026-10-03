@@ -101,7 +101,7 @@ const activeKey = computed({
 
 const active = computed(() => sections.value.find(s => s.key === activeKey.value) ?? sections.value[0]!)
 
-const UNKNOWN_GAME = { name: '—', icon: '🎲' }
+const UNKNOWN_GAME = { name: '—' }
 
 function gameFor(gameId: string) {
   return games.find(x => x.id === gameId) ?? UNKNOWN_GAME
@@ -162,7 +162,7 @@ async function handleMarkReturned(id: string) {
       <tbody>
         <tr v-for="b in active.rows" :key="b.id">
           <td>
-            {{ gameFor(b.gameId).icon }} {{ gameFor(b.gameId).name }}
+            {{ gameFor(b.gameId).name }}
             <span v-if="isArchived(b.gameId)" class="dim">(ลบแล้ว)</span><br>
             <span class="mono dim">{{ copyLabel(b.copyId) }}</span>
           </td>

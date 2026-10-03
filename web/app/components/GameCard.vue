@@ -19,8 +19,8 @@ function goToDetail() {
 
 <template>
   <div class="card-game" role="button" tabindex="0" @click="goToDetail" @keyup.enter="goToDetail">
-    <div class="card-game-icon">
-      <GameImage :src="game.image" :icon="game.icon" :alt="game.name" />
+    <div class="card-game-image">
+      <GameImage :src="game.image" :alt="game.name" />
     </div>
     <div v-if="game.categories.length" class="cat-list">
       <span v-for="c in game.categories" :key="c.id" class="cat">{{ c.name }}</span>

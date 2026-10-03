@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { DEFAULT_ICON, MAX_COPIES_PER_ADD, useBoardGameStore } from '~/composables/useBoardGameStore'
+import { IMAGE_TYPES, MAX_COPIES_PER_ADD, useBoardGameStore } from '~/composables/useBoardGameStore'
 import type { GameInput } from '~/composables/useBoardGameStore'
 import { useToasts } from '~/composables/useToasts'
 
@@ -21,7 +21,8 @@ const backLabel = computed(() =>
   backTo.value.startsWith('/employee/categories/') ? '← กลับไปหน้าหมวดหมู่' : '← กลับไปหน้าจัดการเกม')
 
 const {
-  categories, loading, getGame, createGame, updateGame, deleteGame, gameHasHistory, activeBookingCountForGame
+  categories, loading, getGame, createGame, updateGame, deleteGame, gameHasHistory, activeBookingCountForGame,
+  uploadGameImage, deleteGameImage
 } = useBoardGameStore()
 const { addToast } = useToasts()
 
@@ -33,7 +34,7 @@ const game = computed(() => {
 
 const form = ref({
   name: '',
-  icon: DEFAULT_ICON,
+  image: null as string | null,
   description: '',
   minP: 2,
   maxP: 4,
@@ -46,6 +47,34 @@ const initialCopies = ref(1)
 const errorMessage = ref('')
 const saving = ref(false)
 const deleting = ref(false)
+const uploading = ref(false)
+
+/**
+ * Uploads straight away so the employee can see the cover before committing, but
+ * only puts the URL in the form — the game row is written when they press save.
+ */
+async function onPickImage(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''  // reset, so picking the same file again still fires change
+  if (!file || uploading.value) return
+
+  uploading.value = true
+  const { url, error } = await uploadGameImage(file)
+  uploading.value = false
+
+  if (!url) {
+    addToast(error ?? 'อัปโหลดรูปไม่สำเร็จ', true)
+    return
+  }
+  form.value.image = url
+  addToast('อัปโหลดรูปแล้ว กด "บันทึกการแก้ไข" เพื่อยืนยัน', false)
+}
+
+function removeImage() {
+  form.value.image = null
+  addToast('เอารูปออกแล้ว กด "บันทึกการแก้ไข" เพื่อยืนยัน', false)
+}
 
 // Fill the form once per game. Stock changes reload the data, and refilling on every
 // reload would wipe edits the employee hasn't saved yet.
@@ -54,7 +83,7 @@ watch(game, g => {
   if (!g || filledFor.value === g.id) return
   form.value = {
     name: g.name,
-    icon: g.icon,
+    image: g.image ?? null,
     description: g.description,
     minP: g.minP,
     maxP: g.maxP,
@@ -80,7 +109,7 @@ const canDelete = computed(() => !!game.value && activeCount.value === 0)
 function toInput(): GameInput {
   return {
     name: form.value.name,
-    icon: form.value.icon,
+    image: form.value.image,
     description: form.value.description,
     minP: Number(form.value.minP),
     maxP: Number(form.value.maxP),
@@ -108,12 +137,16 @@ async function save() {
     return
   }
 
+  const previousImage = game.value?.image ?? null
   const { error } = await updateGame(gameId.value, toInput())
   saving.value = false
   if (error) {
     errorMessage.value = error
     return
   }
+  // Only once the row has stopped pointing at it: deleting earlier would leave the
+  // game showing a file that no longer exists if the save then failed.
+  if (previousImage && previousImage !== form.value.image) await deleteGameImage(previousImage)
   filledFor.value = null
   addToast('บันทึกข้อมูลเกมแล้ว', false)
 }
@@ -152,14 +185,37 @@ async function remove() {
       <form class="panel form-panel" @submit.prevent="save">
         <div v-if="errorMessage" class="err">{{ errorMessage }}</div>
 
-        <div class="row-icon-name">
-          <div class="field">
-            <label>ไอคอน</label>
-            <input v-model="form.icon" type="text" class="icon-input" aria-label="ไอคอนอีโมจิ">
-          </div>
-          <div class="field">
-            <label>ชื่อเกม</label>
-            <input v-model="form.name" type="text" maxlength="150" required>
+        <div class="field">
+          <label for="game-name">ชื่อเกม</label>
+          <input id="game-name" v-model="form.name" type="text" maxlength="150" required>
+        </div>
+
+        <div class="field">
+          <label>รูปหน้ากล่อง <span class="optional">(ไม่บังคับ)</span></label>
+          <div class="image-field">
+            <div class="image-preview">
+              <GameImage :src="form.image || undefined" :alt="form.name || 'ยังไม่มีรูป'" />
+            </div>
+            <div class="image-actions">
+              <!-- The file input is hidden; its <label> is the visible control. -->
+              <input
+                id="game-image"
+                type="file"
+                class="sr-only"
+                :accept="IMAGE_TYPES.join(',')"
+                :disabled="uploading"
+                @change="onPickImage"
+              >
+              <div class="cell-actions">
+                <label for="game-image" class="btn btn-ghost btn-sm">
+                  {{ uploading ? 'กำลังอัปโหลด...' : form.image ? 'เปลี่ยนรูป' : 'เลือกรูป' }}
+                </label>
+                <button v-if="form.image" class="btn btn-ghost btn-sm" type="button" @click="removeImage">
+                  เอารูปออก
+                </button>
+              </div>
+              <p class="dim-text">JPG, PNG หรือ WebP · ไม่เกิน 5 MB · รูปจะถูกเก็บใน Supabase Storage</p>
+            </div>
           </div>
         </div>
 

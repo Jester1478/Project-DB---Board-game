@@ -17,8 +17,10 @@ export const CONDITION_LABELS: Record<CopyCondition, string> = {
 /** Upper bound for one "add boxes" action, to catch a mistyped extra zero. */
 export const MAX_COPIES_PER_ADD = 20
 
-/** Shown when board_game.icon is empty. Also the column's default in schema.sql. */
-export const DEFAULT_ICON = '🎲'
+/** Matches the game-images bucket set up in supabase/storage.sql. */
+export const IMAGE_BUCKET = 'game-images'
+export const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+export const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 /** A Reserved booking is held this long past its start time before it counts as a no-show. */
 export const NO_SHOW_GRACE_MINUTES = 10
@@ -54,7 +56,7 @@ export interface Game {
   id: string
   name: string
   description: string
-  icon: string
+  /** Public URL of the uploaded cover in Supabase Storage; undefined when none. */
   image?: string
   /** Every category linked through game_category, in name order. May be empty. */
   categories: Category[]
@@ -78,7 +80,8 @@ export interface Game {
 export interface GameInput {
   name: string
   description: string
-  icon: string
+  /** Public URL from uploadGameImage(), or null to clear the cover. */
+  image: string | null
   minP: number
   maxP: number
   playtime: number
@@ -206,7 +209,7 @@ function messageForCatalogError(err: DbError, whenReferenced = COPY_HAS_HISTORY)
   const detail = `${err.code ?? ''} ${err.message ?? ''}`
   if (err.code === '42501') return NO_CATALOG_PERMISSION
   if (isReferenced(err)) return whenReferenced
-  if (isMissingTable(err) || (err.code === 'PGRST204' && (detail.includes('icon') || detail.includes('deleted_at')))) {
+  if (isMissingTable(err) || (err.code === 'PGRST204' && (detail.includes('image_url') || detail.includes('deleted_at')))) {
     return MIGRATION_NEEDED
   }
   if (detail.includes('chk_board_game_player_range')) return 'จำนวนผู้เล่นสูงสุดต้องไม่น้อยกว่าขั้นต่ำ'
@@ -256,7 +259,7 @@ function createStore(supabase: SupabaseClient) {
       ])
 
       // how_to_play_step only exists once migrate_presentation.sql has run. Until then the
-      // catalog still loads, just with no how-to-play steps and the default icon.
+      // catalog still loads, just without how-to-play steps.
       const stepError = isMissingTable(stepRes.error) ? null : stepRes.error
       const firstError = gameRes.error || copyRes.error || linkRes.error || categoryRes.error || stepError || userRes.error || bookingRes.error
       if (firstError) throw firstError
@@ -301,7 +304,6 @@ function createStore(supabase: SupabaseClient) {
         id: row.game_id,
         name: row.game_name,
         description: row.description ?? '',
-        icon: row.icon || DEFAULT_ICON,
         image: row.image_url || undefined,
         categories: (categoriesByGame.get(row.game_id) ?? []).sort((a, b) => a.name.localeCompare(b.name)),
         minP: row.min_players,
@@ -599,12 +601,49 @@ function createStore(supabase: SupabaseClient) {
     return steps.map(s => s.trim()).filter(Boolean)
   }
 
+  /** The tail of a public URL is the object path, which is what remove() needs. */
+  function imagePath(url: string) {
+    const marker = `/storage/v1/object/public/${IMAGE_BUCKET}/`
+    const i = url.indexOf(marker)
+    return i === -1 ? null : decodeURIComponent(url.slice(i + marker.length))
+  }
+
+  /**
+   * Puts the file in the game-images bucket and returns its public URL, which is
+   * what board_game.image_url stores. Only employees may write to the bucket
+   * (see supabase/storage.sql), but the bucket is public so customers can see it.
+   */
+  async function uploadGameImage(file: File): Promise<{ url: string | null, error: string | null }> {
+    if (!IMAGE_TYPES.includes(file.type)) return { url: null, error: 'รองรับเฉพาะไฟล์ JPG, PNG และ WebP' }
+    if (file.size > MAX_IMAGE_BYTES) return { url: null, error: 'ไฟล์ใหญ่เกิน 5 MB กรุณาย่อรูปก่อนอัปโหลด' }
+
+    // Named by a random id, not the game id: a game being created doesn't have one yet.
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+    const path = `${crypto.randomUUID()}.${ext}`
+
+    const { error } = await supabase.storage
+      .from(IMAGE_BUCKET)
+      .upload(path, file, { contentType: file.type, cacheControl: '3600' })
+    if (error) {
+      console.error('[storage] upload failed', error)
+      return { url: null, error: 'อัปโหลดรูปไม่สำเร็จ — สิทธิ์เจ้าหน้าที่อาจหมดอายุ กรุณาเข้าสู่ระบบใหม่' }
+    }
+
+    return { url: supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path).data.publicUrl, error: null }
+  }
+
+  /** Best effort — a leftover file is untidy, but must never block saving the game. */
+  async function deleteGameImage(url: string) {
+    const path = imagePath(url)
+    if (!path) return
+    const { error } = await supabase.storage.from(IMAGE_BUCKET).remove([path])
+    if (error) console.error('[storage] delete failed', error)
+  }
+
   function validateGameInput(input: GameInput): string | null {
     const name = input.name.trim()
     if (!name) return 'กรุณากรอกชื่อเกม'
     if (name.length > 150) return 'ชื่อเกมยาวได้ไม่เกิน 150 ตัวอักษร'
-    // Postgres VARCHAR counts code points, which is what [...str] gives; .length counts UTF-16 units.
-    if ([...input.icon.trim()].length > 16) return 'ไอคอนยาวได้ไม่เกิน 16 ตัวอักษร (ใส่อีโมจิ 1 ตัว)'
     if (!Number.isInteger(input.minP) || input.minP < 1) return 'จำนวนผู้เล่นขั้นต่ำต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป'
     if (!Number.isInteger(input.maxP) || input.maxP < input.minP) return 'จำนวนผู้เล่นสูงสุดต้องไม่น้อยกว่าขั้นต่ำ'
     if (!Number.isInteger(input.playtime) || input.playtime < 1) return 'เวลาเล่นต้องเป็นจำนวนเต็มนาทีตั้งแต่ 1 ขึ้นไป'
@@ -615,7 +654,7 @@ function createStore(supabase: SupabaseClient) {
     return {
       game_name: input.name.trim(),
       description: input.description.trim() || null,
-      icon: input.icon.trim() || DEFAULT_ICON,
+      image_url: input.image || null,
       min_players: input.minP,
       max_players: input.maxP,
       play_time_mins: input.playtime
@@ -926,6 +965,8 @@ function createStore(supabase: SupabaseClient) {
     createGame,
     updateGame,
     deleteGame,
+    uploadGameImage,
+    deleteGameImage,
     activeBookingCountForGame,
     createCategory,
     renameCategory,

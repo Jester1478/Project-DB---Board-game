@@ -77,7 +77,7 @@ async function remove(game: Game) {
         <div v-if="otherGames.length" class="inline-form">
           <select id="pick-game" v-model="pickedGameId" class="inline-select">
             <option value="" disabled>— เลือกเกม —</option>
-            <option v-for="g in otherGames" :key="g.id" :value="g.id">{{ g.icon }} {{ g.name }}</option>
+            <option v-for="g in otherGames" :key="g.id" :value="g.id">{{ g.name }}</option>
           </select>
           <button class="btn btn-primary btn-sm" type="submit" :disabled="busy || !pickedGameId">+ เพิ่มเข้าหมวด</button>
         </div>
@@ -90,7 +90,7 @@ async function remove(game: Game) {
         </thead>
         <tbody>
           <tr v-for="g in games" :key="g.id">
-            <td><NuxtLink :to="editLink(g)" class="name-link">{{ g.icon }} {{ g.name }}</NuxtLink></td>
+            <td><NuxtLink :to="editLink(g)" class="name-link">{{ g.name }}</NuxtLink></td>
             <td>{{ g.minP }}-{{ g.maxP }} คน · {{ g.playtime }} นาที</td>
             <td>พร้อมให้บริการ {{ usableCount(g) }} กล่อง</td>
             <td>{{ otherCategoryNames(g) || '—' }}</td>

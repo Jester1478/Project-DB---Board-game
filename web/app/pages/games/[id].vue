@@ -31,7 +31,7 @@ function fmtTime(d: Date) {
     <!-- SECTION 1: hero + book button -->
     <section class="game-hero">
       <div class="game-hero-image">
-        <GameImage :src="game.image" :icon="game.icon" :alt="game.name" />
+        <GameImage :src="game.image" :alt="game.name" />
       </div>
       <div class="game-hero-info">
         <div v-if="game.categories.length" class="cat-list">

@@ -84,10 +84,10 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
     relative overflow-hidden cursor-pointer transition-[transform,box-shadow] duration-150;
 }
 .card-game:hover{ @apply -translate-y-[3px] shadow-[0_14px_28px_rgba(30,26,20,0.1)]; }
-.card-game-icon{
+.card-game-image{
   @apply w-[52px] h-[52px] flex items-center justify-center text-[26px] rounded-xl bg-surface-muted mb-[10px] overflow-hidden;
 }
-.card-game-icon img{ @apply w-full h-full object-cover; }
+.card-game-image img{ @apply w-full h-full object-cover; }
 .card-game h3{ @apply text-[16.5px]; margin: 0 0 4px; }
 .cat-list{ @apply flex flex-wrap gap-1 mb-2; }
 .cat{
@@ -177,6 +177,17 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
 .row2{ @apply grid grid-cols-2 gap-[10px] max-sm:grid-cols-1; }
 .modal-actions{ @apply flex gap-[10px] mt-[18px]; }
 .modal-actions .btn{ @apply flex-1; }
+/* Cover upload on the game form: preview beside the controls. */
+.image-field{ @apply flex items-start gap-4 flex-wrap; }
+.image-preview{
+  @apply w-[108px] h-[108px] shrink-0 rounded-card bg-surface-muted border border-border
+    flex items-center justify-center overflow-hidden;
+}
+.image-preview img{ @apply w-full h-full object-cover; }
+.image-actions{ @apply flex flex-col gap-2 min-w-[200px]; }
+.image-actions .dim-text{ @apply m-0; }
+.image-placeholder{ @apply w-2/5 h-2/5 text-muted; }
+
 .hint{ @apply text-[11.5px] text-muted -mt-1; }
 .hint-warn{ @apply text-[#8A6414] bg-reserved-soft rounded-md px-[10px] py-[7px] mt-0; }
 
@@ -294,8 +305,6 @@ footer .staff-link:hover, footer .staff-link:focus-visible{ @apply text-primary-
 .inline-form input{
   @apply flex-1 min-w-[200px] py-[9px] px-[10px] rounded-[7px] border border-border bg-surface font-sans text-[13.5px] text-ink;
 }
-.row-icon-name{ @apply grid grid-cols-[88px_1fr] gap-[10px]; }
-.icon-input{ @apply text-center text-xl; }
 .check-list{ @apply flex flex-wrap gap-x-4 gap-y-2 py-1; }
 .check-item{ @apply inline-flex items-center gap-[6px] text-[13.5px] text-ink cursor-pointer; }
 .field .check-item{ @apply font-normal mb-0; }

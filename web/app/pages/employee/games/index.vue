@@ -61,7 +61,7 @@ function stock(game: Game) {
       </thead>
       <tbody>
         <tr v-for="g in rows" :key="g.id">
-          <td>{{ g.icon }} {{ g.name }}</td>
+          <td>{{ g.name }}</td>
           <td>{{ categoryNames(g) || '—' }}</td>
           <td>{{ g.minP }}-{{ g.maxP }} คน · {{ g.playtime }} นาที</td>
           <td>
@@ -90,7 +90,7 @@ function stock(game: Game) {
         </thead>
         <tbody>
           <tr v-for="g in archivedGames" :key="g.id">
-            <td>{{ g.icon }} {{ g.name }}</td>
+            <td>{{ g.name }}</td>
             <td>{{ g.archivedAt ? dateFormat.format(g.archivedAt) : '—' }}</td>
             <td>{{ g.copies.length }} กล่อง</td>
             <td class="cell-right">
