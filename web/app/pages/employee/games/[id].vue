@@ -102,6 +102,10 @@ watch(() => categories.length, () => {
   }
 }, { immediate: true })
 
+// The stock panel stages its own changes; save() commits them along with the form.
+const stock = ref<{ changeSummary: string[], apply: () => Promise<string | null> } | null>(null)
+const stockPending = computed(() => stock.value?.changeSummary ?? [])
+
 const activeCount = computed(() => (game.value ? activeBookingCountForGame(game.value.id) : 0))
 const hasHistory = computed(() => !!game.value && gameHasHistory(game.value.id))
 const canDelete = computed(() => !!game.value && activeCount.value === 0)
@@ -139,9 +143,17 @@ async function save() {
 
   const previousImage = game.value?.image ?? null
   const { error } = await updateGame(gameId.value, toInput())
-  saving.value = false
   if (error) {
+    saving.value = false
     errorMessage.value = error
+    return
+  }
+
+  // Boxes live in game_copy, so they are applied only once the game row itself saved.
+  const stockError = (await stock.value?.apply()) ?? null
+  saving.value = false
+  if (stockError) {
+    errorMessage.value = stockError
     return
   }
   // Only once the row has stopped pointing at it: deleting earlier would leave the
@@ -259,12 +271,22 @@ async function remove() {
           <input v-model.number="initialCopies" type="number" min="0" :max="MAX_COPIES_PER_ADD" step="1">
         </div>
 
-        <button class="btn btn-primary btn-lg" type="submit" :disabled="saving">
-          {{ saving ? 'กำลังบันทึก...' : isNew ? 'สร้างเกม' : 'บันทึกการแก้ไข' }}
-        </button>
+        <!-- Enter still submits; the visible button lives in the save bar below,
+             because it now commits the stock panel as well. -->
+        <button class="sr-only" type="submit" tabindex="-1" aria-hidden="true" />
       </form>
 
-      <StockManager v-if="game" :game-id="game.id" />
+      <StockManager v-if="game" ref="stock" :game-id="game.id" />
+
+      <div class="save-bar">
+        <p v-if="stockPending.length" class="save-bar-note">
+          รอบันทึก: {{ stockPending.join(' · ') }}
+        </p>
+        <p v-else class="save-bar-note dim-text">การแก้ไขทั้งหน้านี้จะมีผลเมื่อกดบันทึก</p>
+        <button class="btn btn-primary btn-lg" type="button" :disabled="saving" @click="save">
+          {{ saving ? 'กำลังบันทึก...' : isNew ? 'สร้างเกม' : 'บันทึกการแก้ไข' }}
+        </button>
+      </div>
 
       <section v-if="game" class="panel form-panel danger-zone">
         <h3>ลบเกม</h3>

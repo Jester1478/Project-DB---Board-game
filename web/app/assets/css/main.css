@@ -195,6 +195,17 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
 .image-actions .dim-text{ @apply m-0; }
 .image-placeholder{ @apply w-10 h-10 text-muted; }
 
+/* One save for the whole page, pinned so it stays reachable past a long form. */
+.save-bar{
+  @apply sticky bottom-0 z-30 flex items-center justify-between gap-4 flex-wrap mt-4
+    bg-surface border border-border rounded-card shadow-card py-3 px-4;
+}
+.save-bar-note{ @apply m-0 text-[12.5px] text-ink; }
+.save-bar-note.dim-text{ @apply text-muted; }
+.row-removing td{ @apply line-through opacity-55; }
+.row-removing td.cell-right{ @apply no-underline opacity-100; }
+.row-adding td{ @apply text-primary-dark bg-primary-soft; }
+
 .hint{ @apply text-[11.5px] text-muted -mt-1; }
 .hint-warn{ @apply text-[#8A6414] bg-reserved-soft rounded-md px-[10px] py-[7px] mt-0; }
 
