@@ -3,6 +3,11 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   ssr: false,
+  experimental: {
+    // Look for a newer deployment every minute instead of every hour, so an open
+    // tab picks up a fix soon after it ships (see plugins/fresh-build.client.ts).
+    checkOutdatedBuildInterval: 60 * 1000
+  },
   modules: ['@nuxtjs/tailwindcss', '@nuxtjs/supabase'],
   tailwindcss: {
     cssPath: '~/assets/css/main.css'
