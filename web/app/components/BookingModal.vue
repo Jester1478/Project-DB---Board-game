@@ -71,6 +71,17 @@ const firstName = ref('')
 const lastName = ref('')
 const email = ref('')
 const phone = ref('')
+
+/**
+ * Digits only, capped at 10. normalizePhone strips the rest before saving anyway,
+ * but a field that accepts letters it will silently drop is a field that lies.
+ */
+function onPhoneInput(event: Event) {
+  const el = event.target as HTMLInputElement
+  const digits = el.value.replace(/[^0-9]/g, '').slice(0, 10)
+  el.value = digits  // rewrite the box itself, so a rejected key never shows
+  phone.value = digits
+}
 const startTime = ref('')
 const errorMessage = ref('')
 
@@ -160,7 +171,15 @@ async function submit() {
       </div>
       <div class="field">
         <label>เบอร์โทร <span class="optional">(ไม่บังคับ)</span></label>
-        <input v-model="phone" type="tel" placeholder="08XXXXXXXX">
+        <input
+          :value="phone"
+          type="tel"
+          inputmode="numeric"
+          autocomplete="tel"
+          maxlength="10"
+          placeholder="08XXXXXXXX"
+          @input="onPhoneInput"
+        >
       </div>
       <div class="row2">
         <div class="field">
