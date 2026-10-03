@@ -84,10 +84,14 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
     relative overflow-hidden cursor-pointer transition-[transform,box-shadow] duration-150;
 }
 .card-game:hover{ @apply -translate-y-[3px] shadow-[0_14px_28px_rgba(30,26,20,0.1)]; }
+/* Negative margins equal to .card-game's padding bleed the cover to the card edges;
+   the card already clips with overflow-hidden, so its corners stay rounded. */
 .card-game-image{
-  @apply w-[52px] h-[52px] flex items-center justify-center text-[26px] rounded-xl bg-surface-muted mb-[10px] overflow-hidden;
+  @apply -mt-[18px] -mx-[18px] mb-3 aspect-[4/3] bg-surface-muted
+    flex items-center justify-center overflow-hidden;
 }
 .card-game-image img{ @apply w-full h-full object-cover; }
+.card-game-image .image-placeholder{ @apply w-12 h-12; }
 .card-game h3{ @apply text-[16.5px]; margin: 0 0 4px; }
 .cat-list{ @apply flex flex-wrap gap-1 mb-2; }
 .cat{
@@ -120,10 +124,12 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
     shadow-card p-6 mb-[18px];
 }
 .game-hero-image{
-  @apply w-[110px] h-[110px] rounded-[18px] flex-shrink-0 flex items-center justify-center text-[56px] overflow-hidden;
+  @apply w-[240px] max-w-full aspect-[4/3] rounded-[18px] flex-shrink-0
+    flex items-center justify-center overflow-hidden;
   background: linear-gradient(155deg, var(--surface-muted), var(--border));
 }
 .game-hero-image img{ @apply w-full h-full object-cover; }
+.game-hero-image .image-placeholder{ @apply w-16 h-16; }
 .game-hero-info{ @apply flex-1 min-w-[200px]; }
 .game-hero-info h2{ @apply text-2xl; margin: 6px 0 4px; }
 
@@ -179,14 +185,15 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
 .modal-actions .btn{ @apply flex-1; }
 /* Cover upload on the game form: preview beside the controls. */
 .image-field{ @apply flex items-start gap-4 flex-wrap; }
+/* Same 4:3 crop the catalog card uses, so the preview shows what customers get. */
 .image-preview{
-  @apply w-[108px] h-[108px] shrink-0 rounded-card bg-surface-muted border border-border
+  @apply w-[180px] max-w-full aspect-[4/3] shrink-0 rounded-card bg-surface-muted border border-border
     flex items-center justify-center overflow-hidden;
 }
 .image-preview img{ @apply w-full h-full object-cover; }
 .image-actions{ @apply flex flex-col gap-2 min-w-[200px]; }
 .image-actions .dim-text{ @apply m-0; }
-.image-placeholder{ @apply w-2/5 h-2/5 text-muted; }
+.image-placeholder{ @apply w-10 h-10 text-muted; }
 
 .hint{ @apply text-[11.5px] text-muted -mt-1; }
 .hint-warn{ @apply text-[#8A6414] bg-reserved-soft rounded-md px-[10px] py-[7px] mt-0; }
