@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { NO_SHOW_GRACE_MINUTES, useBoardGameStore } from '~/composables/useBoardGameStore'
+import { LATE_FINE_BAHT, NO_SHOW_GRACE_MINUTES, useBoardGameStore } from '~/composables/useBoardGameStore'
 import { useToasts } from '~/composables/useToasts'
 
 // Opening hours, in 30-minute slots.
@@ -202,6 +202,9 @@ async function submit() {
       <p class="hint hint-warn">
         กรุณามารับเกมภายใน {{ NO_SHOW_GRACE_MINUTES }} นาทีหลังเวลาเริ่ม
         หากเลยกำหนด ระบบจะยกเลิกการจองอัตโนมัติและปล่อยกล่องให้คนอื่นจองต่อ
+      </p>
+      <p class="hint hint-warn">
+        กรุณาคืนเกมภายในเวลาสิ้นสุด หากคืนช้ากว่ากำหนด มีค่าปรับครั้งละ {{ LATE_FINE_BAHT }} บาท
       </p>
       <div class="modal-actions">
         <button class="btn btn-ghost" :disabled="saving" @click="emit('close')">ยกเลิก</button>

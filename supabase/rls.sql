@@ -21,6 +21,7 @@ ALTER TABLE public.game_category ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.game_copy     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.booking       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.how_to_play_step ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.fine          ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS prototype_public_access ON public.users;
 DROP POLICY IF EXISTS prototype_public_access ON public.employee;
@@ -50,6 +51,8 @@ DROP POLICY IF EXISTS booking_read ON public.booking;
 DROP POLICY IF EXISTS booking_insert_reserved ON public.booking;
 DROP POLICY IF EXISTS booking_update_employee ON public.booking;
 DROP POLICY IF EXISTS booking_delete_employee ON public.booking;
+DROP POLICY IF EXISTS fine_read_employee ON public.fine;
+DROP POLICY IF EXISTS fine_settle_employee ON public.fine;
 
 CREATE POLICY catalog_read ON public.category      FOR SELECT USING (true);
 CREATE POLICY catalog_read ON public.board_game    FOR SELECT USING (true);
@@ -103,3 +106,12 @@ CREATE POLICY booking_update_employee ON public.booking
     FOR UPDATE USING (public.is_employee()) WITH CHECK (public.is_employee());
 CREATE POLICY booking_delete_employee ON public.booking
     FOR DELETE USING (public.is_employee());
+
+CREATE POLICY fine_read_employee ON public.fine
+    FOR SELECT USING (public.is_employee());
+CREATE POLICY fine_settle_employee ON public.fine
+    FOR UPDATE USING (public.is_employee()) WITH CHECK (public.is_employee());
+
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON public.fine FROM anon, authenticated;
+GRANT SELECT ON public.fine TO anon, authenticated;
+GRANT UPDATE (status, settled_by_id) ON public.fine TO authenticated;

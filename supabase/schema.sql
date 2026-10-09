@@ -1,5 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
+DROP TABLE IF EXISTS public.fine CASCADE;
 DROP TABLE IF EXISTS public.booking CASCADE;
 DROP TABLE IF EXISTS public.how_to_play_step CASCADE;
 DROP TABLE IF EXISTS public.game_category CASCADE;
@@ -160,6 +161,42 @@ CREATE TABLE public.booking (
         ON DELETE SET NULL
 );
 
+CREATE TABLE public.fine (
+    fine_id       VARCHAR(20) PRIMARY KEY,
+    booking_id    VARCHAR(20) NOT NULL UNIQUE,
+    amount        NUMERIC(8,2) NOT NULL,
+
+    status VARCHAR(10) NOT NULL DEFAULT 'Unpaid'
+        CHECK (status IN (
+            'Unpaid',
+            'Paid',
+            'Waived'
+        )),
+
+    issued_at     TIMESTAMP NOT NULL,
+    settled_at    TIMESTAMP,
+    settled_by_id VARCHAR(20),
+
+    CONSTRAINT chk_fine_amount
+        CHECK (amount > 0),
+
+    CONSTRAINT chk_fine_settlement
+        CHECK (
+            (status = 'Unpaid') = (settled_at IS NULL)
+            AND (status <> 'Unpaid' OR settled_by_id IS NULL)
+        ),
+
+    CONSTRAINT fk_fine_booking
+        FOREIGN KEY (booking_id)
+        REFERENCES public.booking(booking_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_fine_settled_employee
+        FOREIGN KEY (settled_by_id)
+        REFERENCES public.employee(employee_id)
+        ON DELETE SET NULL
+);
+
 CREATE INDEX idx_game_category_game
     ON public.game_category(game_id);
 
@@ -186,3 +223,6 @@ CREATE INDEX idx_booking_copy_time
 
 CREATE INDEX idx_booking_status_end
     ON public.booking(status, end_time);
+
+CREATE INDEX idx_fine_status
+    ON public.fine(status);

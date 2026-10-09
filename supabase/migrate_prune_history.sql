@@ -18,7 +18,12 @@ BEGIN
     DELETE FROM public.booking b
     USING  ranked r
     WHERE  b.booking_id = r.booking_id
-      AND  r.rn > keep;
+      AND  r.rn > keep
+      AND  NOT EXISTS (
+               SELECT 1 FROM public.fine f
+               WHERE  f.booking_id = b.booking_id
+                 AND  f.status = 'Unpaid'
+           );
 
     GET DIAGNOSTICS removed = ROW_COUNT;
     RETURN removed;

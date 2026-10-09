@@ -32,6 +32,36 @@ export const NO_SHOW_GRACE_MINUTES = 10
  */
 export const RETURNED_HISTORY_LIMIT = 200
 
+/**
+ * Charged once per booking returned after its end time, however late. The amount
+ * that counts is fine_per_late_return in supabase/migrate_fines.sql — the database
+ * issues the fine; this copy only lets the booking form warn customers up front.
+ */
+export const LATE_FINE_BAHT = 10
+
+// Matches the status CHECK constraint on public.fine
+export type FineStatus = 'Unpaid' | 'Paid' | 'Waived'
+
+export const FINE_STATUS_LABELS: Record<FineStatus, string> = {
+  Unpaid: 'ค้างชำระ',
+  Paid: 'ชำระแล้ว',
+  Waived: 'ยกเว้น'
+}
+
+/**
+ * Mirrors public.fine. How late the return was is not stored: it is the booking's
+ * actual return time minus its end time, both already on the booking.
+ */
+export interface Fine {
+  id: string
+  bookingId: string
+  amount: number
+  status: FineStatus
+  issuedAt: Date
+  settledAt: Date | null
+  settledById: string | null
+}
+
 export interface Copy {
   id: string
   label: string
@@ -131,7 +161,7 @@ export interface BookingInput {
 type DbError = { code?: string, message?: string } | null
 
 /** Result of an employee status change: the updated booking, or why it was refused. */
-export type BookingUpdate = { booking: Booking | null, error: string | null }
+export type BookingUpdate = { booking: Booking | null, error: string | null, fine?: Fine | null }
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
@@ -154,6 +184,28 @@ function toDbTimestamp(d: Date) {
 /** '2026-09-08T14:00:00' has no offset, so JS parses it as local time — the inverse of the above. */
 function fromDbTimestamp(value: string) {
   return new Date(value)
+}
+
+interface FineRow {
+  fine_id: string
+  booking_id: string
+  amount: number | string
+  status: string
+  issued_at: string
+  settled_at: string | null
+  settled_by_id: string | null
+}
+
+function toFine(row: FineRow): Fine {
+  return {
+    id: row.fine_id,
+    bookingId: row.booking_id,
+    amount: Number(row.amount),
+    status: row.status as FineStatus,
+    issuedAt: fromDbTimestamp(row.issued_at),
+    settledAt: row.settled_at ? fromDbTimestamp(row.settled_at) : null,
+    settledById: row.settled_by_id
+  }
 }
 
 /** Postgres/PostgREST codes for "that table doesn't exist". */
@@ -230,6 +282,8 @@ function createStore(supabase: SupabaseClient) {
   const categories = reactive<Category[]>([])
   const users = reactive<User[]>([])
   const bookings = reactive<Booking[]>([])
+  /** Empty for customers: RLS only lets employees read public.fine. */
+  const fines = reactive<Fine[]>([])
 
   const loading = ref(true)
   const loadError = ref<string | null>(null)
@@ -248,20 +302,23 @@ function createStore(supabase: SupabaseClient) {
     loading.value = true
     loadError.value = null
     try {
-      const [gameRes, copyRes, linkRes, categoryRes, stepRes, userRes, bookingRes] = await Promise.all([
+      const [gameRes, copyRes, linkRes, categoryRes, stepRes, userRes, bookingRes, fineRes] = await Promise.all([
         supabase.from('board_game').select('*').order('game_name'),
         supabase.from('game_copy').select('*').order('copy_code'),
         supabase.from('game_category').select('game_id, category_id'),
         supabase.from('category').select('*').order('category_name'),
         supabase.from('how_to_play_step').select('*').order('game_id').order('step_number'),
         supabase.from('users').select('*'),
-        supabase.from('booking').select('*').order('start_time')
+        supabase.from('booking').select('*').order('start_time'),
+        supabase.from('fine').select('*')
       ])
 
       // how_to_play_step only exists once migrate_presentation.sql has run. Until then the
       // catalog still loads, just without how-to-play steps.
       const stepError = isMissingTable(stepRes.error) ? null : stepRes.error
-      const firstError = gameRes.error || copyRes.error || linkRes.error || categoryRes.error || stepError || userRes.error || bookingRes.error
+      // Likewise public.fine, which arrives with migrate_fines.sql.
+      const fineError = isMissingTable(fineRes.error) ? null : fineRes.error
+      const firstError = gameRes.error || copyRes.error || linkRes.error || categoryRes.error || stepError || userRes.error || bookingRes.error || fineError
       if (firstError) throw firstError
 
       categories.splice(0, categories.length, ...(categoryRes.data ?? []).map(row => ({
@@ -336,6 +393,8 @@ function createStore(supabase: SupabaseClient) {
         bookerName: row.booker_name ?? '',
         bookerPhone: row.booker_phone ?? ''
       })))
+
+      fines.splice(0, fines.length, ...(fineRes.error ? [] : (fineRes.data ?? []) as FineRow[]).map(toFine))
 
       await recomputeOverdue()
     } catch (e: unknown) {
@@ -560,7 +619,38 @@ function createStore(supabase: SupabaseClient) {
       local.status = 'Returned'
       local.actualReturn = now
     }
-    return { booking: local ?? null, error: null }
+
+    // trg_issue_late_fine decides whether this return was late; ask what it decided
+    // rather than repeating the rule here.
+    const { data: fineRows } = await supabase.from('fine').select('*').eq('booking_id', id)
+    const fine = fineRows?.length ? toFine(fineRows[0] as FineRow) : null
+    if (fine && !fines.some(f => f.id === fine.id)) fines.push(fine)
+    return { booking: local ?? null, error: null, fine }
+  }
+
+  function fineFor(bookingId: string) {
+    return fines.find(f => f.bookingId === bookingId)
+  }
+
+  /**
+   * Records that a fine was paid or waived, or puts it back to unpaid after a
+   * mis-click. The money itself changes hands outside the system. Only status and
+   * who settled it are writable; the amount and the settlement time belong to the
+   * database (column grants and trg_stamp_fine_settlement).
+   */
+  async function settleFine(fineId: string, status: FineStatus, employeeId: string): Promise<{ fine: Fine | null, error: string | null }> {
+    const { data, error } = await supabase
+      .from('fine')
+      .update({ status, settled_by_id: status === 'Unpaid' ? null : employeeId })
+      .eq('fine_id', fineId)
+      .select('*')
+    if (error) return { fine: null, error: messageForDbError(error) }
+    if (!data?.length) return { fine: null, error: NO_BOOKING_PERMISSION }
+    const updated = toFine(data[0] as FineRow)
+    const i = fines.findIndex(f => f.id === fineId)
+    if (i === -1) fines.push(updated)
+    else fines[i] = updated
+    return { fine: updated, error: null }
   }
 
   /**
@@ -943,6 +1033,9 @@ function createStore(supabase: SupabaseClient) {
     categories,
     users,
     bookings,
+    fines,
+    fineFor,
+    settleFine,
     loading,
     loadError,
     loadAll,
