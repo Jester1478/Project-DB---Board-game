@@ -16,7 +16,7 @@ async function logout() {
   <div class="app-shell">
     <header class="top">
       <NuxtLink to="/employee" class="brand">
-        <div class="mark">🧑‍💼</div>
+        <img class="mark-logo" src="/logo.png" alt="" width="48" height="48">
         <div class="titles">
           <h1>ระบบเจ้าหน้าที่</h1>
           <p>จัดการการส่งมอบ รับคืน และสต๊อกบอร์ดเกม</p>
