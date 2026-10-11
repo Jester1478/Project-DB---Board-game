@@ -192,6 +192,9 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
 .row2{ @apply grid grid-cols-2 gap-[10px] max-sm:grid-cols-1; }
 .modal-actions{ @apply flex gap-[10px] mt-[18px]; }
 .modal-actions .btn{ @apply flex-1; }
+/* "Unsaved changes" dialog: three choices, stacked so each label has room. */
+.leave-text{ @apply text-[13.5px] text-muted leading-relaxed; margin: 6px 0 16px; }
+.leave-actions{ @apply flex flex-col gap-2; }
 /* Cover upload on the game form: preview beside the controls. */
 .image-field{ @apply flex items-start gap-4 flex-wrap; }
 /* Same 4:3 frame the catalog card uses, so the preview shows what customers get. */
