@@ -44,6 +44,7 @@ header.top{
   @apply w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-card;
   background: linear-gradient(155deg, var(--primary), var(--primary-dark));
 }
+.brand .mark-logo{ @apply w-12 h-12 rounded-full shadow-card; }
 .brand .titles h1{ @apply text-lg m-0 font-bold tracking-[0.2px] text-ink; }
 .brand .titles p{ @apply text-xs text-muted; margin: 2px 0 0; }
 

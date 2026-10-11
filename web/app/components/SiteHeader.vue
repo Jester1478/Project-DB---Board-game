@@ -20,7 +20,7 @@ const nowTime = computed(() => simNow.value.toTimeString().slice(0, 5))
 <template>
   <header class="top">
     <NuxtLink to="/" class="brand">
-      <div class="mark">🐍</div>
+      <img class="mark-logo" src="/logo.png" alt="" width="48" height="48">
       <div class="titles">
         <h1>ระบบจองบอร์ดเกม</h1>
         <p>เลือกเกม เช็คคิว แล้วจองได้ทันที</p>
