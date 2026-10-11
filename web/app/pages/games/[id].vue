@@ -38,6 +38,7 @@ function fmtTime(d: Date) {
           <span v-for="c in game.categories" :key="c.id" class="cat">{{ c.name }}</span>
         </div>
         <h2>{{ game.name }}</h2>
+        <p v-if="game.description" class="game-description">{{ game.description }}</p>
         <ul class="game-facts">
           <li>
             <span class="k">ผู้เล่น</span>

@@ -132,6 +132,8 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
 .game-hero-image .image-placeholder{ @apply w-16 h-16; }
 .game-hero-info{ @apply flex-1 min-w-[200px]; }
 .game-hero-info h2{ @apply text-2xl; margin: 6px 0 4px; }
+/* pre-line keeps the line breaks an employee typed in the description box. */
+.game-description{ @apply text-[14px] text-muted leading-relaxed whitespace-pre-line max-w-[62ch]; margin: 0 0 14px; }
 
 .panel{ @apply bg-surface border border-border rounded-card shadow-card mb-4 overflow-hidden; }
 .panel-header{
