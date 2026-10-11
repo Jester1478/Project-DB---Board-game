@@ -48,17 +48,26 @@ const errorMessage = ref('')
 const saving = ref(false)
 const deleting = ref(false)
 const uploading = ref(false)
+/** The picked file while the employee chooses its shape; null when the cropper is closed. */
+const cropping = ref<File | null>(null)
+
+function onPickImage(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''  // reset, so picking the same file again still fires change
+  if (!file || uploading.value) return
+  // Checked here because the cropper can only open what the browser can draw. Size
+  // is checked after cropping instead: a large photo usually shrinks under the limit.
+  if (!IMAGE_TYPES.includes(file.type)) return addToast('รองรับเฉพาะไฟล์ JPG, PNG และ WebP', true)
+  cropping.value = file
+}
 
 /**
  * Uploads straight away so the employee can see the cover before committing, but
  * only puts the URL in the form — the game row is written when they press save.
  */
-async function onPickImage(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  input.value = ''  // reset, so picking the same file again still fires change
-  if (!file || uploading.value) return
-
+async function onCropped(file: File) {
+  cropping.value = null
   uploading.value = true
   const { url, error } = await uploadGameImage(file)
   uploading.value = false
@@ -226,7 +235,7 @@ async function remove() {
                   เอารูปออก
                 </button>
               </div>
-              <p class="dim-text">JPG, PNG หรือ WebP · ไม่เกิน 5 MB · รูปจะถูกเก็บใน Supabase Storage</p>
+              <p class="dim-text">JPG, PNG หรือ WebP · เลือกสัดส่วนและตำแหน่งได้หลังเลือกไฟล์ · รูปจะถูกเก็บใน Supabase Storage</p>
             </div>
           </div>
         </div>
@@ -275,6 +284,8 @@ async function remove() {
              because it now commits the stock panel as well. -->
         <button class="sr-only" type="submit" tabindex="-1" aria-hidden="true" />
       </form>
+
+      <ImageCropper v-if="cropping" :file="cropping" @confirm="onCropped" @cancel="cropping = null" />
 
       <StockManager v-if="game" ref="stock" :game-id="game.id" />
 

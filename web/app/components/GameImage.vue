@@ -12,7 +12,12 @@ watch(() => props.src, () => { failed.value = false })
 </script>
 
 <template>
-  <img v-if="src && !failed" :src="src" :alt="alt" @error="failed = true">
+  <template v-if="src && !failed">
+    <!-- Covers come in whatever shape the employee chose. The whole picture is shown,
+         and a blurred copy fills what the frame has left over. -->
+    <img class="image-backdrop" :src="src" alt="" aria-hidden="true">
+    <img :src="src" :alt="alt" @error="failed = true">
+  </template>
   <svg v-else class="image-placeholder" viewBox="0 0 24 24" fill="none" role="img" :aria-label="alt">
     <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" stroke-width="1.5" />
     <circle cx="8.6" cy="8.6" r="1.4" fill="currentColor" />
