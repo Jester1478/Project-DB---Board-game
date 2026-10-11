@@ -81,8 +81,12 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
 .grid{ display: grid; @apply gap-4 grid-cols-[repeat(auto-fill,minmax(230px,1fr))]; }
 .card-game{
   @apply bg-surface rounded-card text-ink p-[18px] shadow-card border border-border
-    relative overflow-hidden cursor-pointer transition-[transform,box-shadow] duration-150;
+    relative overflow-hidden cursor-pointer transition-[transform,box-shadow] duration-150
+    flex flex-col;
 }
+/* Cards in a row share a height; pushing the pill down lines up every "จองเลย" button
+   whether or not the card has a description. */
+.card-game .status-pill{ @apply mt-auto self-start; }
 .card-game:hover{ @apply -translate-y-[3px] shadow-[0_14px_28px_rgba(30,26,20,0.1)]; }
 /* Negative margins equal to .card-game's padding bleed the cover to the card edges;
    the card already clips with overflow-hidden, so its corners stay rounded. */
@@ -93,6 +97,8 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
 .card-game-image img{ @apply relative w-full h-full object-contain; }
 .card-game-image .image-placeholder{ @apply w-12 h-12; }
 .card-game h3{ @apply text-[16.5px]; margin: 0 0 4px; }
+/* Two lines at most, so a long description cannot make one card taller than its row. */
+.card-game-description{ @apply text-[12.5px] text-muted leading-snug line-clamp-2; margin: 0 0 6px; }
 .cat-list{ @apply flex flex-wrap gap-1 mb-2; }
 .cat{
   @apply inline-block text-[10.5px] uppercase tracking-[0.06em] bg-primary-soft text-primary-dark
