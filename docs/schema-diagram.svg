@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1580 1130" width="1580" height="1130" font-family="Segoe UI, Arial, sans-serif">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b42318"/></marker></defs>
+<rect width="1580" height="1130" fill="#ffffff"/>
+<polyline points="1106,180 1106,140 285,140 285,100" fill="none" stroke="#b42318" stroke-width="1.6" marker-end="url(#ah)"/>
+<polyline points="384.5,300 384.5,260 294.5,260 294.5,220" fill="none" stroke="#b42318" stroke-width="1.6" marker-end="url(#ah)"/>
+<polyline points="896.5,340 896.5,368 268,368 268,440" fill="none" stroke="#b42318" stroke-width="1.6" marker-end="url(#ah)"/>
+<polyline points="1222.5,220 1222.5,390 299,390 299,440" fill="none" stroke="#b42318" stroke-width="1.6" marker-end="url(#ah)"/>
+<polyline points="1357,220 1357,412 330,412 330,440" fill="none" stroke="#b42318" stroke-width="1.6" marker-end="url(#ah)"/>
+<polyline points="1465,220 1465,520 285,520 285,560" fill="none" stroke="#b42318" stroke-width="1.6" marker-end="url(#ah)"/>
+<polyline points="754,600 754,640 285,640 285,680" fill="none" stroke="#b42318" stroke-width="1.6" marker-end="url(#ah)"/>
+<polyline points="302,800 302,720" fill="none" stroke="#b42318" stroke-width="1.6" marker-end="url(#ah)"/>
+<polyline points="285,920 285,880 212,880 212,760 262,760 262,720" fill="none" stroke="#b42318" stroke-width="1.6" marker-end="url(#ah)"/>
+<polyline points="389,960 389,1000 299,1000 299,1040" fill="none" stroke="#b42318" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="24" y="85" font-size="14.5" font-weight="700" fill="#1f2933">Users</text>
+<rect x="240" y="60" width="90" height="40" fill="#dbeafe" stroke="#1f2933" stroke-width="1.5"/><text x="285" y="85" text-anchor="middle" font-size="13" fill="#1f2933" text-decoration="underline" font-weight="600">user_id</text>
+<rect x="330" y="60" width="109" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="384.5" y="85" text-anchor="middle" font-size="13" fill="#1f2933">first_name</text>
+<rect x="439" y="60" width="101" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="489.5" y="85" text-anchor="middle" font-size="13" fill="#1f2933">last_name</text>
+<rect x="540" y="60" width="90" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="585" y="85" text-anchor="middle" font-size="13" fill="#1f2933">email</text>
+<rect x="630" y="60" width="90" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="675" y="85" text-anchor="middle" font-size="13" fill="#1f2933">phone</text>
+<text x="24" y="205" font-size="14.5" font-weight="700" fill="#1f2933">Booking</text>
+<rect x="240" y="180" width="109" height="40" fill="#dbeafe" stroke="#1f2933" stroke-width="1.5"/><text x="294.5" y="205" text-anchor="middle" font-size="13" fill="#1f2933" text-decoration="underline" font-weight="600">booking_id</text>
+<rect x="349" y="180" width="109" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="403.5" y="205" text-anchor="middle" font-size="13" fill="#1f2933">start_time</text>
+<rect x="458" y="180" width="92" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="504" y="205" text-anchor="middle" font-size="13" fill="#1f2933">end_time</text>
+<rect x="550" y="180" width="177" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="638.5" y="205" text-anchor="middle" font-size="13" fill="#1f2933">actual_return_time</text>
+<rect x="727" y="180" width="90" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="772" y="205" text-anchor="middle" font-size="13" fill="#1f2933">status</text>
+<rect x="817" y="180" width="118" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="876" y="205" text-anchor="middle" font-size="13" fill="#1f2933">booker_name</text>
+<rect x="935" y="180" width="126" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="998" y="205" text-anchor="middle" font-size="13" fill="#1f2933">booker_phone</text>
+<rect x="1061" y="180" width="90" height="40" fill="#fef3c7" stroke="#1f2933" stroke-width="1.5"/><text x="1106" y="205" text-anchor="middle" font-size="13" fill="#1f2933">user_id</text>
+<rect x="1151" y="180" width="143" height="40" fill="#fef3c7" stroke="#1f2933" stroke-width="1.5"/><text x="1222.5" y="205" text-anchor="middle" font-size="13" fill="#1f2933">checkout_by_id</text>
+<rect x="1294" y="180" width="126" height="40" fill="#fef3c7" stroke="#1f2933" stroke-width="1.5"/><text x="1357" y="205" text-anchor="middle" font-size="13" fill="#1f2933">return_by_id</text>
+<rect x="1420" y="180" width="90" height="40" fill="#fef3c7" stroke="#1f2933" stroke-width="1.5"/><text x="1465" y="205" text-anchor="middle" font-size="13" fill="#1f2933">copy_id</text>
+<text x="24" y="325" font-size="14.5" font-weight="700" fill="#1f2933">Fine</text>
+<rect x="240" y="300" width="90" height="40" fill="#dbeafe" stroke="#1f2933" stroke-width="1.5"/><text x="285" y="325" text-anchor="middle" font-size="13" fill="#1f2933" text-decoration="underline" font-weight="600">fine_id</text>
+<rect x="330" y="300" width="109" height="40" fill="#fef3c7" stroke="#1f2933" stroke-width="1.5"/><text x="384.5" y="325" text-anchor="middle" font-size="13" fill="#1f2933">booking_id</text>
+<rect x="439" y="300" width="90" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="484" y="325" text-anchor="middle" font-size="13" fill="#1f2933">amount</text>
+<rect x="529" y="300" width="90" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="574" y="325" text-anchor="middle" font-size="13" fill="#1f2933">status</text>
+<rect x="619" y="300" width="101" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="669.5" y="325" text-anchor="middle" font-size="13" fill="#1f2933">issued_at</text>
+<rect x="720" y="300" width="109" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="774.5" y="325" text-anchor="middle" font-size="13" fill="#1f2933">settled_at</text>
+<rect x="829" y="300" width="135" height="40" fill="#fef3c7" stroke="#1f2933" stroke-width="1.5"/><text x="896.5" y="325" text-anchor="middle" font-size="13" fill="#1f2933">settled_by_id</text>
+<text x="24" y="465" font-size="14.5" font-weight="700" fill="#1f2933">Employee</text>
+<rect x="240" y="440" width="118" height="40" fill="#dbeafe" stroke="#1f2933" stroke-width="1.5"/><text x="299" y="465" text-anchor="middle" font-size="13" fill="#1f2933" text-decoration="underline" font-weight="600">employee_id</text>
+<rect x="358" y="440" width="109" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="412.5" y="465" text-anchor="middle" font-size="13" fill="#1f2933">first_name</text>
+<rect x="467" y="440" width="101" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="517.5" y="465" text-anchor="middle" font-size="13" fill="#1f2933">last_name</text>
+<rect x="568" y="440" width="90" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="613" y="465" text-anchor="middle" font-size="13" fill="#1f2933">email</text>
+<rect x="658" y="440" width="90" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="703" y="465" text-anchor="middle" font-size="13" fill="#1f2933">phone</text>
+<text x="24" y="585" font-size="14.5" font-weight="700" fill="#1f2933">Game_copy</text>
+<rect x="240" y="560" width="90" height="40" fill="#dbeafe" stroke="#1f2933" stroke-width="1.5"/><text x="285" y="585" text-anchor="middle" font-size="13" fill="#1f2933" text-decoration="underline" font-weight="600">copy_id</text>
+<rect x="330" y="560" width="101" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="380.5" y="585" text-anchor="middle" font-size="13" fill="#1f2933">copy_code</text>
+<rect x="431" y="560" width="118" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="490" y="585" text-anchor="middle" font-size="13" fill="#1f2933">copy_number</text>
+<rect x="549" y="560" width="160" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="629" y="585" text-anchor="middle" font-size="13" fill="#1f2933">condition_status</text>
+<rect x="709" y="560" width="90" height="40" fill="#fef3c7" stroke="#1f2933" stroke-width="1.5"/><text x="754" y="585" text-anchor="middle" font-size="13" fill="#1f2933">game_id</text>
+<text x="24" y="705" font-size="14.5" font-weight="700" fill="#1f2933">Board_game</text>
+<rect x="240" y="680" width="90" height="40" fill="#dbeafe" stroke="#1f2933" stroke-width="1.5"/><text x="285" y="705" text-anchor="middle" font-size="13" fill="#1f2933" text-decoration="underline" font-weight="600">game_id</text>
+<rect x="330" y="680" width="101" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="380.5" y="705" text-anchor="middle" font-size="13" fill="#1f2933">game_name</text>
+<rect x="431" y="680" width="118" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="490" y="705" text-anchor="middle" font-size="13" fill="#1f2933">description</text>
+<rect x="549" y="680" width="118" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="608" y="705" text-anchor="middle" font-size="13" fill="#1f2933">min_players</text>
+<rect x="667" y="680" width="118" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="726" y="705" text-anchor="middle" font-size="13" fill="#1f2933">max_players</text>
+<rect x="785" y="680" width="143" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="856.5" y="705" text-anchor="middle" font-size="13" fill="#1f2933">play_time_mins</text>
+<rect x="928" y="680" width="101" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="978.5" y="705" text-anchor="middle" font-size="13" fill="#1f2933">image_url</text>
+<rect x="1029" y="680" width="109" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="1083.5" y="705" text-anchor="middle" font-size="13" fill="#1f2933">deleted_at</text>
+<text x="24" y="825" font-size="14.5" font-weight="700" fill="#1f2933">How_to_play_step</text>
+<rect x="240" y="800" width="90" height="40" fill="#dbeafe" stroke="#1f2933" stroke-width="1.5"/><text x="285" y="825" text-anchor="middle" font-size="13" fill="#1f2933" text-decoration="underline" font-weight="600">game_id</text>
+<rect x="330" y="800" width="118" height="40" fill="#dbeafe" stroke="#1f2933" stroke-width="1.5"/><text x="389" y="825" text-anchor="middle" font-size="13" fill="#1f2933" text-decoration="underline" font-weight="600">step_number</text>
+<rect x="448" y="800" width="101" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="498.5" y="825" text-anchor="middle" font-size="13" fill="#1f2933">step_text</text>
+<text x="24" y="945" font-size="14.5" font-weight="700" fill="#1f2933">Game_category</text>
+<rect x="240" y="920" width="90" height="40" fill="#dbeafe" stroke="#1f2933" stroke-width="1.5"/><text x="285" y="945" text-anchor="middle" font-size="13" fill="#1f2933" text-decoration="underline" font-weight="600">game_id</text>
+<rect x="330" y="920" width="118" height="40" fill="#dbeafe" stroke="#1f2933" stroke-width="1.5"/><text x="389" y="945" text-anchor="middle" font-size="13" fill="#1f2933" text-decoration="underline" font-weight="600">category_id</text>
+<text x="24" y="1065" font-size="14.5" font-weight="700" fill="#1f2933">Category</text>
+<rect x="240" y="1040" width="118" height="40" fill="#dbeafe" stroke="#1f2933" stroke-width="1.5"/><text x="299" y="1065" text-anchor="middle" font-size="13" fill="#1f2933" text-decoration="underline" font-weight="600">category_id</text>
+<rect x="358" y="1040" width="135" height="40" fill="#ffffff" stroke="#1f2933" stroke-width="1.5"/><text x="425.5" y="1065" text-anchor="middle" font-size="13" fill="#1f2933">category_name</text>
+<g font-size="12.5" fill="#1f2933"><rect x="1010" y="880" width="540" height="220" fill="#ffffff" stroke="#52606d"/>
+<text x="1026" y="906" font-weight="700" font-size="13.5">สัญลักษณ์</text>
+<rect x="1026" y="922" width="76" height="26" fill="#dbeafe" stroke="#1f2933" stroke-width="1.4"/><text x="1064" y="940" text-anchor="middle" text-decoration="underline" font-weight="600">key</text><text x="1118" y="940">Primary key (ขีดเส้นใต้)</text>
+<rect x="1026" y="960" width="76" height="26" fill="#fef3c7" stroke="#1f2933" stroke-width="1.4"/><text x="1064" y="978" text-anchor="middle">key</text><text x="1118" y="978">Foreign key</text>
+<rect x="1026" y="998" width="76" height="26" fill="#dbeafe" stroke="#1f2933" stroke-width="1.4"/><text x="1064" y="1016" text-anchor="middle" text-decoration="underline" font-weight="600">key</text><text x="1118" y="1016">เป็นทั้ง Primary key และ Foreign key (มีลูกศรออก)</text>
+<line x1="1028" y1="1050" x2="1100" y2="1050" stroke="#b42318" stroke-width="1.6" marker-end="url(#ah)"/><text x="1118" y="1055">Foreign key ชี้ไปยัง Primary key ที่อ้างถึง</text>
+<text x="1026" y="1083" fill="#52606d">Fine.booking_id ไม่ซ้ำกัน (UNIQUE): การจอง 1 รายการมีค่าปรับได้ไม่เกิน 1 รายการ</text>
+</g>
+</svg>
