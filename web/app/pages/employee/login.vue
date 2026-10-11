@@ -4,7 +4,7 @@ import { useEmployeeAuth } from '~/composables/useEmployeeAuth'
 
 definePageMeta({ layout: 'employee' })
 
-const { employee, ensureLoaded, signIn } = useEmployeeAuth()
+const { employee, checkTimedOut, ensureLoaded, signIn } = useEmployeeAuth()
 
 const email = ref('')
 const password = ref('')
@@ -40,6 +40,9 @@ async function submit() {
       <h2>เข้าสู่ระบบเจ้าหน้าที่</h2>
       <p class="sub">ใช้อีเมลและรหัสผ่านที่ได้รับจากผู้ดูแลระบบ</p>
       <div v-if="errorMessage" class="err">{{ errorMessage }}</div>
+      <div v-else-if="checkTimedOut" class="err">
+        ตรวจสอบการเข้าสู่ระบบไม่สำเร็จ เพราะฐานข้อมูลไม่ตอบกลับ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง
+      </div>
       <div class="field">
         <label>อีเมล</label>
         <input v-model="email" type="email" autocomplete="username" required>

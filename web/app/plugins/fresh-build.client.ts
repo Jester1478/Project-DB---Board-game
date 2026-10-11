@@ -16,7 +16,9 @@ export default defineNuxtPlugin(nuxtApp => {
   }
 
   function reloadIfIdle() {
-    if (outdated && !busy()) reloadNuxtApp({ persistState: true })
+    // No persistState: it would copy the employee's session tokens into sessionStorage,
+    // and nothing here needs carrying over — every page reloads its data anyway.
+    if (outdated && !busy()) reloadNuxtApp()
   }
 
   async function check() {

@@ -3,6 +3,8 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   ssr: false,
+  // Shown until the first page is ready, so a slow start is never a blank screen.
+  spaLoadingTemplate: true,
   experimental: {
     // Look for a newer deployment every minute instead of every hour, so an open
     // tab picks up a fix soon after it ships (see plugins/fresh-build.client.ts).
