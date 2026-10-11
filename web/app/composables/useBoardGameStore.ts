@@ -339,7 +339,18 @@ function createStore(supabase: SupabaseClient) {
 
   // ---------- loading ----------
 
-  async function loadAll() {
+  /**
+   * A browser that once signed in as an employee keeps sending that session with
+   * every request. If the server no longer accepts it, every table answers 401 —
+   * including the public catalog, which needs no login at all. Renew the session,
+   * or failing that drop it, so the reads can go through as an ordinary visitor.
+   */
+  async function recoverFromRejectedSession() {
+    const { error } = await supabase.auth.refreshSession()
+    if (error) await supabase.auth.signOut({ scope: 'local' })
+  }
+
+  async function loadAll(afterSessionRecovery = false) {
     loading.value = true
     loadError.value = null
     try {
@@ -353,6 +364,11 @@ function createStore(supabase: SupabaseClient) {
         supabase.from('booking').select('*').order('start_time'),
         supabase.from('fine').select('*')
       ])
+
+      if (afterSessionRecovery !== true && [gameRes, copyRes, bookingRes].some(res => res.status === 401)) {
+        await recoverFromRejectedSession()
+        return await loadAll(true)
+      }
 
       // how_to_play_step only exists once migrate_presentation.sql has run. Until then the
       // catalog still loads, just without how-to-play steps.
