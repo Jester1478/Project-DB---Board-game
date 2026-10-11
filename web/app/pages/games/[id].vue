@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { useBoardGameStore } from '~/composables/useBoardGameStore'
+import { COPY_STATUS_LABELS, useBoardGameStore } from '~/composables/useBoardGameStore'
 
 const route = useRoute()
 const gameId = computed(() => String(route.params.id))
@@ -80,7 +80,7 @@ function fmtTime(d: Date) {
         <div v-for="copy in copies" :key="copy.id" class="copy-row">
           <div class="copy-row-head">
             <span class="name">{{ copy.label }}</span>
-            <span class="state" :class="copyStatus(copy)">{{ copyStatus(copy) === 'free' ? 'ว่าง' : 'ไม่ว่าง' }}</span>
+            <span class="state" :class="copyStatus(copy)">{{ COPY_STATUS_LABELS[copyStatus(copy)] }}</span>
           </div>
           <div v-if="bookingsForCopy(copy.id).length" class="booking-chips">
             <span v-for="b in bookingsForCopy(copy.id)" :key="b.id" class="chip" :class="b.status">

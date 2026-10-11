@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { LATE_FINE_BAHT, NO_SHOW_GRACE_MINUTES, useBoardGameStore } from '~/composables/useBoardGameStore'
+import { COPY_STATUS_LABELS, LATE_FINE_BAHT, NO_SHOW_GRACE_MINUTES, useBoardGameStore } from '~/composables/useBoardGameStore'
 import { useToasts } from '~/composables/useToasts'
 
 // Opening hours, in 30-minute slots.
@@ -151,7 +151,7 @@ async function submit() {
         <label>กล่อง</label>
         <select v-model="selectedCopyId">
           <option v-for="copy in copies" :key="copy.id" :value="copy.id">
-            {{ copy.label }} — {{ copyStatus(copy) === 'free' ? 'ว่าง' : 'ไม่ว่าง' }}
+            {{ copy.label }} — {{ COPY_STATUS_LABELS[copyStatus(copy)] }}
           </option>
         </select>
       </div>

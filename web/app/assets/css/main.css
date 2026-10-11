@@ -150,7 +150,8 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
 .copy-row-head .name{ @apply font-mono text-[13px] text-wood-dark; }
 .copy-row-head .state{ @apply text-xs py-[3px] px-[9px] rounded-full font-semibold; }
 .copy-row-head .state.free{ @apply bg-ok-soft text-[#1A8046]; }
-.copy-row-head .state.busy{ @apply bg-reserved-soft text-[#8A6414]; }
+.copy-row-head .state.reserved{ @apply bg-reserved-soft text-[#8A6414]; }
+.copy-row-head .state.busy{ @apply bg-inuse-soft text-[#1D4ED8]; }
 .booking-chips{ @apply flex flex-wrap gap-2; }
 .chip{ @apply font-mono text-[11.5px] py-[5px] px-[10px] rounded-lg border border-border; }
 .chip.Reserved{ @apply bg-reserved-soft text-[#8A6414]; }

@@ -62,6 +62,20 @@ export interface Fine {
   settledById: string | null
 }
 
+/**
+ * What a customer is told about a box right now:
+ *   free     — nobody holds it
+ *   reserved — booked and waiting to be collected; other time slots can still be booked
+ *   busy     — out with a customer
+ */
+export type CopyStatus = 'free' | 'reserved' | 'busy'
+
+export const COPY_STATUS_LABELS: Record<CopyStatus, string> = {
+  free: 'ว่าง',
+  reserved: 'มีคิวจอง',
+  busy: 'กำลังใช้งาน'
+}
+
 export interface Copy {
   id: string
   label: string
@@ -184,6 +198,33 @@ function toDbTimestamp(d: Date) {
 /** '2026-09-08T14:00:00' has no offset, so JS parses it as local time — the inverse of the above. */
 function fromDbTimestamp(value: string) {
   return new Date(value)
+}
+
+interface BookingRow {
+  booking_id: string
+  copy_id: string
+  user_id: string
+  start_time: string
+  end_time: string
+  status: string
+  actual_return_time: string | null
+  booker_name: string | null
+  booker_phone: string | null
+}
+
+function toBooking(row: BookingRow, gameId: string): Booking {
+  return {
+    id: row.booking_id,
+    gameId,
+    copyId: row.copy_id,
+    userId: row.user_id,
+    start: fromDbTimestamp(row.start_time),
+    end: fromDbTimestamp(row.end_time),
+    status: row.status as BookingStatus,
+    actualReturn: row.actual_return_time ? fromDbTimestamp(row.actual_return_time) : null,
+    bookerName: row.booker_name ?? '',
+    bookerPhone: row.booker_phone ?? ''
+  }
 }
 
 interface FineRow {
@@ -381,18 +422,8 @@ function createStore(supabase: SupabaseClient) {
         phone: row.phone ?? ''
       })))
 
-      bookings.splice(0, bookings.length, ...(bookingRes.data ?? []).map(row => ({
-        id: row.booking_id,
-        gameId: copyToGame.get(row.copy_id) ?? '',
-        copyId: row.copy_id,
-        userId: row.user_id,
-        start: fromDbTimestamp(row.start_time),
-        end: fromDbTimestamp(row.end_time),
-        status: row.status as BookingStatus,
-        actualReturn: row.actual_return_time ? fromDbTimestamp(row.actual_return_time) : null,
-        bookerName: row.booker_name ?? '',
-        bookerPhone: row.booker_phone ?? ''
-      })))
+      bookings.splice(0, bookings.length, ...((bookingRes.data ?? []) as BookingRow[])
+        .map(row => toBooking(row, copyToGame.get(row.copy_id) ?? '')))
 
       fines.splice(0, fines.length, ...(fineRes.error ? [] : (fineRes.data ?? []) as FineRow[]).map(toFine))
 
@@ -402,6 +433,27 @@ function createStore(supabase: SupabaseClient) {
       loadError.value = 'โหลดข้อมูลจากฐานข้อมูลไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อแล้วรีเฟรชหน้าเว็บ'
     } finally {
       loading.value = false
+    }
+  }
+
+  /**
+   * Re-reads only the bookings, without the loading state loadAll() shows. Run on the
+   * clock tick so a box booked by someone else stops showing as free on every open
+   * page within seconds, not at the next manual refresh.
+   */
+  let refreshing = false
+  async function refreshBookings() {
+    if (refreshing || loading.value) return
+    refreshing = true
+    try {
+      const { data, error } = await supabase.from('booking').select('*').order('start_time')
+      if (error || loading.value) return
+      const gameOfCopy = new Map(games.flatMap(g => g.copies.map(c => [c.id, g.id] as const)))
+      bookings.splice(0, bookings.length, ...((data ?? []) as BookingRow[])
+        .map(row => toBooking(row, gameOfCopy.get(row.copy_id) ?? '')))
+      await recomputeOverdue()
+    } finally {
+      refreshing = false
     }
   }
 
@@ -452,9 +504,14 @@ function createStore(supabase: SupabaseClient) {
     return game.copies.filter(isUsableCopy)
   }
 
-  function copyStatus(copy: Copy): 'free' | 'busy' {
-    const blocking = bookings.some(b => b.copyId === copy.id && (b.status === 'In_Use' || b.status === 'Overdue'))
-    return blocking ? 'busy' : 'free'
+  /**
+   * A box stops counting as free the moment it is booked, not when an employee hands
+   * it over — otherwise the catalog keeps advertising a box someone already holds.
+   */
+  function copyStatus(copy: Copy): CopyStatus {
+    const held = bookings.filter(b => b.copyId === copy.id)
+    if (held.some(b => b.status === 'In_Use' || b.status === 'Overdue')) return 'busy'
+    return held.some(b => b.status === 'Reserved') ? 'reserved' : 'free'
   }
 
   function freeCopyCount(game: Game) {
@@ -1022,7 +1079,9 @@ function createStore(supabase: SupabaseClient) {
   /** The clock always follows the device's real time — it can't be overridden. */
   function syncToRealTime() {
     simNow.value = new Date()
-    void recomputeOverdue()
+    // refreshBookings() runs the status sweep itself once the fresh rows are in.
+    if (typeof document !== 'undefined' && document.hidden) void recomputeOverdue()
+    else void refreshBookings()
   }
 
   void loadAll()
