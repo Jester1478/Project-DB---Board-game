@@ -19,7 +19,7 @@ BEGIN
 END;
 $$;
 
-REVOKE EXECUTE ON FUNCTION public.sweep_booking_statuses() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.sweep_booking_statuses() FROM PUBLIC, anon, authenticated;
 
 SELECT cron.schedule(
     'sweep-booking-statuses',

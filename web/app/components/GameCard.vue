@@ -28,10 +28,14 @@ function goToDetail() {
     <h3>{{ game.name }}</h3>
     <p v-if="game.description" class="card-game-description">{{ game.description }}</p>
     <div class="meta">{{ game.minP }}-{{ game.maxP }} ผู้เล่น · เล่นรอบละ ~{{ game.playtime }} นาที</div>
-    <div class="status-pill" :class="free > 0 ? 'avail' : 'full'">
+    <!-- A game whose boxes are all retired has nothing to be "full" of, and nothing to book. -->
+    <div v-if="total === 0" class="status-pill none">ยังไม่มีกล่องให้บริการ</div>
+    <div v-else class="status-pill" :class="free > 0 ? 'avail' : 'full'">
       <span class="dot" />
       {{ free > 0 ? `เหลือ ${free}/${total} กล่อง` : `ไม่ว่าง (0/${total} กล่อง)` }}
     </div>
-    <button class="btn btn-primary" @click.stop="goToDetail">จองเลย →</button>
+    <button class="btn" :class="total ? 'btn-primary' : 'btn-ghost'" @click.stop="goToDetail">
+      {{ total ? 'จองเลย →' : 'ดูรายละเอียด →' }}
+    </button>
   </div>
 </template>

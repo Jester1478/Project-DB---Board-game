@@ -54,7 +54,7 @@ BEGIN
 END;
 $$;
 
-REVOKE EXECUTE ON FUNCTION public.find_or_create_user(text, text, text, text) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.find_or_create_user(text, text, text, text) FROM PUBLIC, anon, authenticated;
 GRANT  EXECUTE ON FUNCTION public.find_or_create_user(text, text, text, text) TO anon, authenticated;
 
 DROP POLICY IF EXISTS users_read ON public.users;

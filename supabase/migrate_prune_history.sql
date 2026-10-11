@@ -30,7 +30,7 @@ BEGIN
 END;
 $$;
 
-REVOKE EXECUTE ON FUNCTION public.prune_returned_history(integer) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.prune_returned_history(integer) FROM PUBLIC, anon, authenticated;
 
 SELECT cron.schedule(
     'prune-returned-history',

@@ -108,6 +108,7 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
 .status-pill{ @apply inline-flex items-center gap-[6px] text-[12.5px] font-semibold py-[5px] px-[10px] rounded-full mb-3; }
 .status-pill.avail{ @apply bg-ok-soft text-[#1A8046]; }
 .status-pill.full{ @apply bg-overdue-soft text-overdue; }
+.status-pill.none{ @apply bg-surface-muted text-muted; }
 .status-pill .dot{ @apply w-[7px] h-[7px] rounded-full bg-current; }
 
 .btn{
@@ -166,6 +167,12 @@ main{ @apply flex-1 max-w-[1200px] mx-auto w-full pt-7 px-7 pb-[60px] max-sm:pt-
 .chip.In_Use{ @apply bg-inuse-soft text-[#1D4ED8]; }
 .chip.Overdue{ @apply bg-overdue-soft text-[#B91C1C]; }
 .empty-hint{ @apply text-[13px] text-muted; margin: 0; }
+
+/* ===== Error page (app/error.vue) ===== */
+.error-page{ @apply min-h-dvh flex flex-col items-center justify-center gap-2 text-center p-6 bg-bg text-ink; }
+.error-page h1{ @apply text-2xl font-heading; margin: 0; }
+.error-page .error-code{ @apply font-mono text-sm text-muted tracking-[0.2em]; margin: 0; }
+.error-page .btn{ @apply mt-4; }
 
 /* ===== Modal ===== */
 .overlay{

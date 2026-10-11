@@ -63,7 +63,7 @@ BEGIN
 END;
 $$;
 
-REVOKE EXECUTE ON FUNCTION public.issue_late_fine() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.issue_late_fine() FROM PUBLIC, anon, authenticated;
 
 DROP TRIGGER IF EXISTS trg_issue_late_fine ON public.booking;
 
@@ -143,4 +143,4 @@ BEGIN
 END;
 $$;
 
-REVOKE EXECUTE ON FUNCTION public.prune_returned_history(integer) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.prune_returned_history(integer) FROM PUBLIC, anon, authenticated;

@@ -41,7 +41,7 @@ BEGIN
 END;
 $$;
 
-REVOKE EXECUTE ON FUNCTION public.enforce_booking_rules() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.enforce_booking_rules() FROM PUBLIC, anon, authenticated;
 
 DROP TRIGGER IF EXISTS trg_enforce_booking_rules ON public.booking;
 

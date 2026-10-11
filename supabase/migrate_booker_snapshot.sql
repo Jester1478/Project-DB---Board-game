@@ -18,7 +18,7 @@ BEGIN
 END;
 $$;
 
-REVOKE EXECUTE ON FUNCTION public.snapshot_booker() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.snapshot_booker() FROM PUBLIC, anon, authenticated;
 
 DROP TRIGGER IF EXISTS trg_snapshot_booker ON public.booking;
 
